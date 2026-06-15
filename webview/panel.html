@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; style-src {{CSP_SOURCE}} 'unsafe-inline'; script-src {{CSP_SOURCE}};" />
+  <link rel="stylesheet" href="{{CSS_URI}}" />
+  <script src="{{I18N_URI}}"></script>
+  <script src="{{ICONS_URI}}"></script>
+  <title>ADHDGoFly</title>
+</head>
+<body>
+
+<!-- ── Tabs ─────────────────────────────────────────────────────── -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="annotate" data-i18n="tabAnnotate">标注</button>
+  <button class="tab-btn"        data-tab="dicts" data-i18n="tabDicts">词典</button>
+  <button class="tab-btn"        data-tab="batch" data-i18n="tabBatch">批量</button>
+  <button class="tab-btn"        data-tab="settings" data-i18n="tabSettings">设置</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- TAB: 标注视图                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="tab-annotate" class="tab-content active">
+
+  <!-- File header + pos filter chips -->
+  <div class="annotate-header">
+    <span id="file-name" class="file-name">—</span>
+    <div class="pos-chips" id="pos-chips">
+      <button class="chip active" data-pos="n"     data-i18n="posLabelN">n</button>
+      <button class="chip active" data-pos="v"     data-i18n="posLabelV">v</button>
+      <button class="chip active" data-pos="a"     data-i18n="posLabelA">a</button>
+      <button class="chip active" data-pos="other" data-i18n="posLabelOther">o</button>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="stats-bar" style="display:none">
+    <div class="stat-row" id="stat-n"  ><span class="stat-label pos-n"     data-i18n="posLabelN">n</span><div class="stat-track"><div class="stat-fill pos-n"  ></div></div><span class="stat-num"></span></div>
+    <div class="stat-row" id="stat-v"  ><span class="stat-label pos-v"     data-i18n="posLabelV">v</span><div class="stat-track"><div class="stat-fill pos-v"  ></div></div><span class="stat-num"></span></div>
+    <div class="stat-row" id="stat-a"  ><span class="stat-label pos-a"     data-i18n="posLabelA">a</span><div class="stat-track"><div class="stat-fill pos-a"></div></div><span class="stat-num"></span></div>
+    <div class="stat-row" id="stat-other"><span class="stat-label pos-other" data-i18n="posLabelOther">o</span><div class="stat-track"><div class="stat-fill pos-other"></div></div><span class="stat-num"></span></div>
+  </div>
+
+  <!-- Word frequency list (replaces annotated text) -->
+  <div id="word-frequency-section" class="word-freq-section">
+    <div class="freq-header" id="freq-header" style="display:none">
+      <span class="freq-title" data-i18n="wordList">词汇列表</span>
+      <div class="freq-sort-group">
+        <button class="sort-btn active" data-sort="freq" data-i18n="sortFreq">频率↓</button>
+        <button class="sort-btn" data-sort="alpha" data-i18n="sortAlpha">A→Z</button>
+        <button class="sort-btn" data-sort="pos" data-i18n="sortPos">词性</button>
+      </div>
+    </div>
+    <div id="word-frequency-list" class="word-freq-list"></div>
+    <div id="freq-empty" class="empty-state" data-i18n="emptyAnnotate">打开一个 .md 或 .txt 文件，词汇频率将显示在这里。</div>
+    <div id="save-dict-bar" style="display:none;margin-top:6px;flex-shrink:0">
+      <button class="btn-outline w-full" id="btn-save-user-dict" data-i18n="saveAsDict">+ 保存为自建词典</button>
+    </div>
+  </div>
+
+  <!-- Word detail tooltip (hidden by default) -->
+  <div id="word-tooltip" class="word-tooltip" style="display:none">
+    <span id="tooltip-word" class="tooltip-word"></span>
+    <span id="tooltip-pos"  class="tooltip-pos"></span>
+    <button id="tooltip-edit" class="tooltip-edit-btn" data-i18n="tooltipEdit">编辑</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- TAB: 词典管理                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="tab-dicts" class="tab-content">
+
+  <!-- Dict sub-tabs: 安装 / 内置 / 社区 / 自建 -->
+  <div class="dict-subtabs">
+    <button class="dict-subtab active" data-dictview="installed" data-i18n="dictInstalled">安装</button>
+    <button class="dict-subtab" data-dictview="builtin" data-i18n="dictBuiltin">内置</button>
+    <button class="dict-subtab" data-dictview="community" data-i18n="dictCommunity">社区</button>
+    <button class="dict-subtab" data-dictview="user" data-i18n="dictUser">自建</button>
+  </div>
+
+  <!-- Installed view (all dicts with toggle, default) -->
+  <div id="dict-list-view" class="dict-view-content" style="display:block">
+    <div class="section-header">
+      <span class="section-title" data-i18n="sectionInstalled">已安装词典</span>
+      <button class="btn-sm" id="btn-import-dict" data-i18n="btnImport">+ 导入</button>
+    </div>
+    <div id="dict-list-items">
+      <div class="empty-state" data-i18n="loading">加载中...</div>
+    </div>
+    <div id="export-bar" class="export-bar">
+      <button class="btn-outline w-full" id="btn-export-current" data-i18n="btnExport">导出当前文档词汇</button>
+    </div>
+  </div>
+
+  <!-- Builtin view -->
+  <div id="dict-builtin-view" class="dict-view-content" style="display:none">
+    <div class="section-header">
+      <span class="section-title" data-i18n="sectionBuiltin">内置词典</span>
+    </div>
+    <div id="builtin-dict-list" class="builtin-dict-list">
+      <div class="empty-state" data-i18n="loading">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Community view -->
+  <div id="dict-community-view" class="dict-view-content" style="display:none">
+    <div class="section-header">
+      <span class="section-title" data-i18n="sectionCommunity">社区词典</span>
+      <button class="btn-sm" id="btn-upload-dict" data-i18n="btnUpload">+ 上传</button>
+    </div>
+    <div id="community-dict-list" class="community-dict-list">
+      <div class="empty-state" data-i18n="loading">加载中...</div>
+    </div>
+  </div>
+
+  <!-- User-created dict view -->
+  <div id="dict-user-view" class="dict-view-content" style="display:none">
+    <div class="section-header">
+      <span class="section-title" data-i18n="sectionUser">自建词典</span>
+      <button class="btn-sm" id="btn-refresh-user-dicts" data-i18n="btnRefresh">↻</button>
+    </div>
+    <div id="user-dict-list" class="user-dict-list">
+      <div class="empty-state" data-i18n="emptyUser">暂无自建词典。从标注 Tab 保存词汇即可创建。</div>
+    </div>
+  </div>
+
+  <!-- Detail view (hidden until a dict is opened) -->
+  <div id="dict-detail-view" style="display:none">
+    <div class="detail-topbar">
+      <button class="btn-back" id="btn-back-to-list" data-i18n="btnBack">← 返回</button>
+      <span id="detail-lang-label" class="detail-lang-label"></span>
+      <button class="btn-sm" id="btn-add-word" data-i18n="btnAddWord">+ 新增</button>
+    </div>
+    <div class="detail-toolbar">
+      <input id="dict-search" type="text" placeholder="搜索词汇..." class="search-input" data-i18n-placeholder="searchPlaceholder" />
+      <div class="page-size-group">
+        <button class="ps-btn active" data-size="25">25</button>
+        <button class="ps-btn" data-size="50">50</button>
+        <button class="ps-btn" data-size="100">100</button>
+      </div>
+      <span id="detail-total" class="detail-total"></span>
+    </div>
+    <div id="dict-entries-list" class="entries-list"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- TAB: 批量处理                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="tab-batch" class="tab-content batch-tab">
+
+  <!-- Sub-tabs: 文件视图 / 处理结果 -->
+  <div class="batch-subtabs">
+    <button class="batch-subtab active" data-batchview="files" data-i18n="batchViewFiles">文件视图</button>
+    <button class="batch-subtab" data-batchview="results" data-i18n="batchViewResults">处理结果</button>
+  </div>
+
+  <!-- Action buttons (shared) -->
+  <div class="batch-actions">
+    <button class="btn-icon" id="btn-batch-clear" data-i18n="batchClear" style="margin-left:auto">清除结果</button>
+  </div>
+
+  <!-- Progress bar (shared) -->
+  <div id="batch-progress-bar" class="batch-progress-bar">
+    <div class="batch-progress-track">
+      <div id="batch-progress-fill" class="batch-progress-fill"></div>
+    </div>
+    <div class="batch-progress-info">
+      <span id="batch-progress-text" data-i18n="batchProgress">已处理: 0/0 文件</span>
+      <button class="btn-sm" id="btn-batch-cancel" data-i18n="batchCancel">取消</button>
+    </div>
+  </div>
+
+  <!-- 文件视图: project file tree with checkboxes -->
+  <div id="batch-view-files" class="batch-view-content">
+    <div id="batch-file-tree" class="batch-tree">
+      <div class="empty-state" data-i18n="batchLoadingTree">正在加载项目文件...</div>
+    </div>
+  </div>
+
+  <!-- 处理结果: batch processing results -->
+  <div id="batch-view-results" class="batch-view-content" style="display:none">
+    <div id="batch-tree" class="batch-tree">
+      <div class="empty-state" data-i18n="batchNoResults">暂无批量处理结果</div>
+    </div>
+    <div id="batch-stats" class="batch-stats" style="display:none">
+      <div class="batch-stats-header">
+        <span id="batch-stats-total" data-i18n="batchTotalFiles">总计: 0 文件</span>
+        <span id="batch-stats-success" data-i18n="batchSuccessCount">成功: 0</span>
+        <span id="batch-stats-errors" data-i18n="batchErrorCount" class="error-text">失败: 0</span>
+      </div>
+    </div>
+    <div id="batch-export-bar" style="display:none;margin-top:8px">
+      <button class="btn-outline w-full" id="btn-batch-export-all" data-i18n="batchExportAll">导出全部为词典</button>
+    </div>
+    <div id="batch-aggregated-section" class="batch-aggregated" style="display:none">
+      <div class="batch-agg-header" id="batch-agg-toggle">
+        <span>▼ <span data-i18n="batchAggregated">折叠词汇频率</span></span>
+        <span id="batch-agg-count" data-i18n="batchMergedWords">共 0 个唯一词</span>
+      </div>
+      <div id="batch-agg-body" class="batch-agg-body">
+        <div class="batch-agg-toolbar">
+          <div class="page-size-group">
+            <button class="ps-btn active" data-size="25">25</button>
+            <button class="ps-btn" data-size="50">50</button>
+            <button class="ps-btn" data-size="100">100</button>
+          </div>
+          <span id="batch-agg-pagination-info" class="batch-agg-page-info"></span>
+        </div>
+        <div id="batch-agg-list" class="batch-agg-list"></div>
+        <div class="pagination" id="batch-agg-pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- TAB: 设置                                                      -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="tab-settings" class="tab-content">
+  <div class="settings-section">
+    <div class="settings-title" data-i18n="settingsHighlight">高亮设置</div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingEnabled">启用高亮</label>
+      <label class="toggle"><input type="checkbox" id="cfg-enabled" /><span class="slider"></span></label>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Language / 语言</label>
+      <select id="cfg-locale" class="setting-select">
+        <option value="auto">Auto (follow VS Code)</option>
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingStyle">标注模式</label>
+      <select id="cfg-decoration-style" class="setting-select">
+        <option value="color" data-i18n="styleColor">文字变色</option>
+        <option value="highlight" data-i18n="styleHighlight">色框</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingIntensity">高亮强度</label>
+      <div class="setting-slider-group">
+        <input type="range" id="cfg-font-size" class="setting-slider" min="0.8" max="1.5" step="0.05" />
+        <span id="cfg-font-size-label" class="setting-slider-label">1.0×</span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingMinWord">最小词长</label>
+      <input type="number" id="cfg-min-word-length" class="setting-input-num" min="1" max="10" value="2" />
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingComment">注释中标注</label>
+      <label class="toggle"><input type="checkbox" id="cfg-highlight-comments" /><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- AI 词性判定设置 -->
+  <div class="settings-section" style="margin-top:12px">
+    <div class="settings-title" data-i18n="settingsAi">AI 词性判定</div>
+
+    <div class="setting-row">
+      <label class="setting-label" data-i18n="settingAiEnabled">启用 AI 判定</label>
+      <label class="toggle"><input type="checkbox" id="cfg-ai-enabled" /><span class="slider"></span></label>
+    </div>
+
+    <div id="ai-providers-list" class="providers-list">
+      <!-- Provider cards rendered by JS -->
+    </div>
+
+    <div class="providers-footer">
+      <button class="btn-sm" id="btn-add-provider" data-i18n="btnAddProvider">+ 添加提供商</button>
+      <button class="btn-sm" id="btn-save-providers" style="display:none" data-i18n="btnSaveProviders">保存提供商设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- Edit / Add word overlay                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="edit-overlay" class="overlay" style="display:none">
+  <div class="overlay-panel">
+    <div class="overlay-title" id="overlay-title" data-i18n="editTitle">编辑词性</div>
+    <div id="overlay-new-word-row" style="display:none">
+      <input type="text" id="overlay-new-word" placeholder="输入词汇..." class="overlay-input" data-i18n-placeholder="inputWord" />
+    </div>
+    <div id="overlay-word-display" class="overlay-word"></div>
+    <div class="overlay-section-label" data-i18n="selectPos">选择词性</div>
+    <div class="pos-grid" id="pos-grid"></div>
+    <div class="selected-pos-row" id="selected-pos-row"></div>
+    <div class="overlay-actions">
+      <button class="btn-ai-judge" id="btn-ai-judge" data-i18n="btnAiJudge">AI 判定</button>
+      <button class="btn-primary" id="overlay-save" data-i18n="btnSave">保存</button>
+      <button class="btn-outline" id="overlay-cancel" data-i18n="btnCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload dict overlay -->
+<div id="upload-overlay" class="overlay" style="display:none">
+  <div class="overlay-panel">
+    <div class="overlay-title" data-i18n="uploadDictTitle">上传词典到社区</div>
+    <div class="overlay-section-label" data-i18n="uploadDictName">词典名称</div>
+    <input type="text" id="upload-dict-name" class="overlay-input" placeholder="输入词典名称..." data-i18n-placeholder="uploadDictNamePlaceholder" />
+    <div class="overlay-section-label" data-i18n="uploadDictLang">词典语言</div>
+    <select id="upload-dict-lang" class="overlay-input">
+      <option value="en">英语 (EN)</option>
+      <option value="zh">中文 (ZH)</option>
+      <option value="fr">法语 (FR)</option>
+      <option value="es">西班牙语 (ES)</option>
+      <option value="ja">日语 (JA)</option>
+      <option value="ru">俄语 (RU)</option>
+    </select>
+    <div class="overlay-section-label" style="margin-top:8px;color:var(--vscode-descriptionForeground)" data-i18n="uploadDesc"></div>
+    <div class="overlay-actions" style="margin-top:12px">
+      <button class="btn-primary" id="upload-dict-confirm" data-i18n="btnConfirm">确认上传</button>
+      <button class="btn-outline" id="upload-dict-cancel" data-i18n="btnCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save user dict overlay -->
+<div id="save-user-overlay" class="overlay" style="display:none">
+  <div class="overlay-panel">
+    <div class="overlay-title" data-i18n="saveDictTitle">保存为自建词典</div>
+    <div class="overlay-section-label" data-i18n="saveDictName">词典名称</div>
+    <input type="text" id="save-user-dict-name" class="overlay-input" placeholder="如：我的项目词汇" data-i18n-placeholder="saveDictNamePlaceholder" />
+    <div class="overlay-section-label" data-i18n="saveDictLang">语言</div>
+    <select id="save-user-dict-lang" class="overlay-input">
+      <option value="en">英语 (EN)</option>
+      <option value="zh">中文 (ZH)</option>
+      <option value="fr">法语 (FR)</option>
+      <option value="es">西班牙语 (ES)</option>
+      <option value="ja">日语 (JA)</option>
+      <option value="ru">俄语 (RU)</option>
+    </select>
+    <div class="overlay-actions" style="margin-top:12px">
+      <button class="btn-primary" id="save-user-dict-confirm" data-i18n="btnSaveDict">保存</button>
+      <button class="btn-outline" id="save-user-dict-cancel" data-i18n="btnCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden locale element for i18n.js detection -->
+<div id="__adhd-locale" data-value="auto" style="display:none"></div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<script src="{{JS_URI}}"></script>
+</body>
+</html>

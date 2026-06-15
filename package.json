@@ -1,0 +1,147 @@
+{
+  "name": "adhdgofly-highlight",
+  "displayName": "ADHDGoFly Highlight",
+  "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
+  "version": "1.0.0",
+  "publisher": "adhdgofly",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onLanguage:plaintext",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:python",
+    "onLanguage:go",
+    "onLanguage:html",
+    "onCommand:adhdgofly.enable",
+    "onCommand:adhdgofly.disable",
+    "onCommand:adhdgofly.annotateSelection",
+    "onCommand:adhdgofly.exportDict",
+    "onView:adhdgofly.panel",
+    "onCommand:adhdgofly.processFile",
+    "onCommand:adhdgofly.processFolder",
+    "onCommand:adhdgofly.processProject"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "adhdgofly-sidebar",
+          "title": "ADHDGoFly",
+          "icon": "icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "adhdgofly-sidebar": [
+        {
+          "type": "webview",
+          "id": "adhdgofly.panel",
+          "name": "ADHDGoFly Highlight"
+        }
+      ]
+    },
+    "commands": [
+      { "command": "adhdgofly.enable",            "title": "ADHDGoFly: Enable Highlighting" },
+      { "command": "adhdgofly.disable",           "title": "ADHDGoFly: Disable Highlighting" },
+      { "command": "adhdgofly.annotateSelection", "title": "ADHDGoFly: Annotate Selection" },
+      { "command": "adhdgofly.exportDict",        "title": "ADHDGoFly: Export Dictionary" },
+      { "command": "adhdgofly.processFile",       "title": "ADHDGoFly: 处理文件" },
+      { "command": "adhdgofly.processFolder",     "title": "ADHDGoFly: 处理文件夹" },
+      { "command": "adhdgofly.processProject",    "title": "ADHDGoFly: 处理整个项目" }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname =~ /\\.(md|txt|html?|py|go|js|ts|jsx|tsx)$/",
+          "command": "adhdgofly.processFile",
+          "group": "adhdgofly@1"
+        },
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "adhdgofly.processFolder",
+          "group": "adhdgofly@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ADHDGoFly Highlight",
+      "properties": {
+        "adhdgofly.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable POS highlighting"
+        },
+        "adhdgofly.languages": {
+          "type": "array",
+          "default": ["en", "zh"],
+          "description": "Enabled dictionary languages"
+        },
+        "adhdgofly.minWordLength": {
+          "type": "number",
+          "default": 2,
+          "description": "Minimum word length to annotate (filters single-letter words like 'a', 'I')"
+        },
+        "adhdgofly.highlightInComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to highlight words inside code comments and string literals"
+        },
+        "adhdgofly.decorationStyle": {
+          "type": "string",
+          "default": "color",
+          "enum": ["color", "highlight"],
+          "description": "Highlight mode: 'color' = text color only, 'highlight' = background + border box"
+        },
+        "adhdgofly.locale": {
+          "type": "string",
+          "default": "auto",
+          "enum": ["auto", "zh", "en"],
+          "description": "UI language: auto=follow VS Code, zh=Chinese, en=English"
+        },
+        "adhdgofly.posFilter": {
+          "type": "array",
+          "default": ["n", "v", "a", "other"],
+          "description": "Which POS categories to display"
+        },
+        "adhdgofly.disabledDicts": {
+          "type": "array",
+          "default": [],
+          "description": "List of disabled dictionary IDs (empty = all enabled)"
+        },
+        "adhdgofly.aiEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI POS judging in the edit overlay"
+        },
+        "adhdgofly.aiProviders": {
+          "type": "string",
+          "default": "[{\"name\":\"OpenAI\",\"apiUrl\":\"https://api.openai.com/v1/chat/completions\",\"apiKey\":\"\",\"model\":\"gpt-4o-mini\",\"isPrimary\":true},{\"name\":\"Anthropic Claude\",\"apiUrl\":\"https://api.anthropic.com/v1/chat/completions\",\"apiKey\":\"\",\"model\":\"claude-sonnet-4-20250514\",\"isPrimary\":false},{\"name\":\"DeepSeek\",\"apiUrl\":\"https://api.deepseek.com/v1/chat/completions\",\"apiKey\":\"\",\"model\":\"deepseek-chat\",\"isPrimary\":false}]",
+          "description": "AI providers configuration as JSON array (name, apiUrl, apiKey, model, isPrimary)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "vitest run",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

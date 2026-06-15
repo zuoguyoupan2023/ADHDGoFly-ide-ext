@@ -1,0 +1,17 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- 正三角形 (A) - 底边800px，靠近底部 -->
+  <path d="M 512 211.2 L 112 904 L 912 904 Z"
+        fill="#FEE2E2"
+        stroke="#F87171"
+        stroke-width="24"
+        stroke-linejoin="round"/>
+
+  <!-- T 字组合 -->
+  <g fill="#10B981">
+    <!-- T 字的横线（斜线） -->
+    <path d="M 520 190 L 920 82.84 L 920 122.84 L 520 230 Z"/>
+
+    <!-- T 字的竖线 -->
+    <rect x="890" y="82.84" width="60" height="821.16" rx="12"/>
+  </g>
+</svg>
