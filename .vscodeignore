@@ -11,4 +11,4 @@ tsconfig.json
 vitest.config.ts
 .eslintrc.json
 **/*.map
-*.bak
+**/*.bak
