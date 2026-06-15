@@ -4,8 +4,11 @@ src/**
 node_modules/**
 out/test/**
 docs/**
+scripts/**
+.claude/**
 .gitignore
 tsconfig.json
 vitest.config.ts
 .eslintrc.json
 **/*.map
+*.bak
