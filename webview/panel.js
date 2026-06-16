@@ -1,6 +1,6 @@
 // @ts-nocheck
 /**
- * ADHDGoFly Side Panel — Webview script.
+ * adhdgofly-ide-ext Side Panel — Webview script.
  * Runs inside VS Code's sandboxed Webview context.
  * All VS Code API access goes through vscode.postMessage / window.addEventListener('message').
  */

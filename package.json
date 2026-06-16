@@ -1,6 +1,6 @@
 {
-  "name": "adhdgofly-highlight",
-  "displayName": "ADHDGoFlY",
+  "name": "adhdgofly-ide-ext",
+  "displayName": "adhdgofly-ide-ext",
   "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
   "version": "1.0.0",
   "publisher": "adhdgofly",
@@ -40,7 +40,7 @@
       "activitybar": [
         {
           "id": "adhdgofly-sidebar",
-          "title": "ADHDGoFlY",
+          "title": "adhdgofly-ide-ext",
           "icon": "icon.svg"
         }
       ]
@@ -50,38 +50,38 @@
         {
           "type": "webview",
           "id": "adhdgofly.panel",
-          "name": "ADHDGoFlY"
+          "name": "adhdgofly-ide-ext"
         }
       ]
     },
     "commands": [
       {
         "command": "adhdgofly.enable",
-        "title": "ADHDGoFly: Enable Highlighting"
+        "title": "adhdgofly-ide-ext: Enable Highlighting"
       },
       {
         "command": "adhdgofly.disable",
-        "title": "ADHDGoFly: Disable Highlighting"
+        "title": "adhdgofly-ide-ext: Disable Highlighting"
       },
       {
         "command": "adhdgofly.annotateSelection",
-        "title": "ADHDGoFly: Annotate Selection"
+        "title": "adhdgofly-ide-ext: Annotate Selection"
       },
       {
         "command": "adhdgofly.exportDict",
-        "title": "ADHDGoFly: Export Dictionary"
+        "title": "adhdgofly-ide-ext: Export Dictionary"
       },
       {
         "command": "adhdgofly.processFile",
-        "title": "ADHDGoFly: 处理文件"
+        "title": "adhdgofly-ide-ext: 处理文件"
       },
       {
         "command": "adhdgofly.processFolder",
-        "title": "ADHDGoFly: 处理文件夹"
+        "title": "adhdgofly-ide-ext: 处理文件夹"
       },
       {
         "command": "adhdgofly.processProject",
-        "title": "ADHDGoFly: 处理整个项目"
+        "title": "adhdgofly-ide-ext: 处理整个项目"
       }
     ],
     "menus": {
@@ -99,7 +99,7 @@
       ]
     },
     "configuration": {
-      "title": "ADHDGoFly Highlight",
+      "title": "adhdgofly-ide-ext",
       "properties": {
         "adhdgofly.enabled": {
           "type": "boolean",

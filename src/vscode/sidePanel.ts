@@ -1,5 +1,5 @@
 /**
- * SidePanelProvider — registers the WebviewView for the ADHDGoFly sidebar.
+ * SidePanelProvider — registers the WebviewView for the adhdgofly-ide-ext sidebar.
  *
  * Communication protocol (postMessage):
  *   Extension → Webview:  { type: ExtToWebview, ...payload }
@@ -178,14 +178,14 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
         })
         if (uri) {
           await vscode.workspace.fs.writeFile(uri, Buffer.from(json, 'utf-8'))
-          vscode.window.showInformationMessage(`ADHDGoFly: 词典已导出到 ${uri.fsPath}`)
+          vscode.window.showInformationMessage(`adhdgofly-ide-ext: 词典已导出到 ${uri.fsPath}`)
         }
         break
       }
 
       case 'exportCurrentDoc': {
         if (!this.lastAnnotatedWords.length) {
-          vscode.window.showWarningMessage('ADHDGoFly: 当前文档无标注词汇')
+          vscode.window.showWarningMessage('adhdgofly-ide-ext: 当前文档无标注词汇')
           break
         }
         // Deduplicate words and build export format
@@ -215,7 +215,7 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
         })
         if (exportUri) {
           await vscode.workspace.fs.writeFile(exportUri, Buffer.from(JSON.stringify(payload, null, 2), 'utf-8'))
-          vscode.window.showInformationMessage(`ADHDGoFly: 当前文档词汇已导出到 ${exportUri.fsPath}`)
+          vscode.window.showInformationMessage(`adhdgofly-ide-ext: 当前文档词汇已导出到 ${exportUri.fsPath}`)
         }
         break
       }
@@ -407,7 +407,7 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
         try {
           await this.batchProcessor.processFolder(vscode.Uri.file(folderPath))
         } catch (err) {
-          vscode.window.showErrorMessage('ADHDGoFly: 处理文件夹失败 -- ' + (err as Error).message)
+          vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理文件夹失败 -- ' + (err as Error).message)
         }
         break
       }
@@ -447,7 +447,7 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
           this.batchProcessor.clear()
           await this.batchProcessor.processWithProgress(toProcess)
         } catch (err) {
-          vscode.window.showErrorMessage('ADHDGoFly: 处理选中文件失败 -- ' + (err as Error).message)
+          vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理选中文件失败 -- ' + (err as Error).message)
         }
         break
       }
@@ -473,7 +473,7 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
         if (!this.batchProcessor) break
         const results = this.batchProcessor.getResults()
         if (results.length === 0) {
-          vscode.window.showWarningMessage('ADHDGoFly: 暂无批量处理结果')
+          vscode.window.showWarningMessage('adhdgofly-ide-ext: 暂无批量处理结果')
           break
         }
         const name = await vscode.window.showInputBox({ prompt: '请输入词典名称', placeHolder: 'My Batch Dict' })
@@ -501,7 +501,7 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
           }
           await this.batchProcessor.processFolder(folders[0].uri)
         } catch (err) {
-          vscode.window.showErrorMessage('ADHDGoFly: 处理项目失败 -- ' + (err as Error).message)
+          vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理项目失败 -- ' + (err as Error).message)
         }
         break
       }

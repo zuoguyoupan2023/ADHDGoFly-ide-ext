@@ -1,4 +1,4 @@
-# ADHDGoFlY
+# adhdgofly-ide-ext
 
 POS-based vocabulary highlighting for VS Code, Cursor, Windsurf, Kiro, and Trae. Automatically highlights nouns, verbs, adjectives, and adverbs in markdown, plain text, and code comments.
 
@@ -50,7 +50,7 @@ npm test              # Run unit tests (18 tests)
 
 ## Dictionary Format
 
-See [`docs/006-dict-format.md`](docs/006-dict-format.md) for the shared JSON schema used across all ADHDGoFly projects.
+See [`docs/006-dict-format.md`](docs/006-dict-format.md) for the shared JSON schema used across all adhdgofly-ide-ext projects.
 
 ## Architecture
 

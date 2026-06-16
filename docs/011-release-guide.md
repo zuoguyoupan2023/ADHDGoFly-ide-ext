@@ -2,11 +2,9 @@
 
 > 本文档详细说明将 ADHDGoFly Highlight 发布到各平台的全流程。
 >
-> 扩展 ID: `adhdgofly.adhdgofly-highlight` | 发布者: `adhdgofly`
+> 扩展 ID: `adhdgofly.adhdgofly-ide-ext` | 发布者: `adhdgofly`
 >
 > 前置文档: `007-publish-prep.md`（发布前检查清单）
->
-> **现状: v1.0.0 已打包就绪 ✅** — 见 §十一 完成状态
 
 ---
 
@@ -46,7 +44,7 @@
    - 如果没有绑定，可以在登录页面选择"使用 Microsoft 账户登录"→ 用你的邮箱创建
 3. 登录后 → 输入 Publisher 名称 → **`adhdgofly`**
    - 注意：publisher 名称全局唯一，一旦创建不可更改
-   - 扩展 ID 格式为 `publisher.extensionName`，即 `adhdgofly.adhdgofly-highlight`
+   - 扩展 ID 格式为 `publisher.extensionName`，即 `adhdgofly.adhdgofly-ide-ext`
 4. 创建成功后，进入 Publisher 设置页面
 
 ### 2.2 VS Code Marketplace — 生成 PAT
@@ -108,10 +106,10 @@ vsce version major   # 0.2.0 → 1.0.0
 
 ### 4.1 打包前确认
 
-- [x] `package.json` 的 `version` 已更新 → `1.0.0`
-- [x] `.vscodeignore` 配置正确 — 已排除 `docs/`、`src/`、`node_modules/`、`.claude/`、`scripts/`、`**/*.bak`
+- [ ] `package.json` 的 `version` 已更新
+- [ ] `.vscodeignore` 配置正确（已排除 `docs/`、`src/`、`node_modules/` 等）
 - [ ] 内置词典文件未被排除（检查 `dictionaries/` 路径在 `.vscodeignore` 中无匹配）
-- [x] 已运行 `npm run build && vsce package --no-yarn` 确认无编译错误
+- [ ] 已运行 `npm run compile` 确认无编译错误
 
 ### 4.2 执行打包
 
@@ -124,38 +122,30 @@ vsce package --no-yarn          # 生成 .vsix
 输出示例：
 
 ```
-DONE  Packaged: adhdgofly-highlight-1.0.0.vsix (2.54 MB, 38 files)
+DONE  Packaged: adhdgofly-ide-ext-0.2.0.vsix (13.2MB)
 ```
 
 ### 4.3 检查打包内容
 
 ```bash
 # 查看 .vsix 中的文件列表
-unzip -l adhdgofly-highlight-*.vsix | less
+unzip -l adhdgofly-ide-ext-*.vsix | less
 
 # 确认关键文件都在:
-#   LICENSE.txt (已包含)
 #   extension.js (已编译)
 #   webview/panel.html
 #   webview/panel.js
 #   webview/panel.css
 #   webview/i18n.js
 #   webview/icons.js
-#   dictionaries/*.json        (确认 .bak 备份文件已被排除)
+#   dictionaries/*.json
 #   package.json
 ```
-
-> **提示**: 检查 `.vscodeignore` 是否误排除了必要文件。当前配置排除了以下非必需内容：
-> - `.claude/**` — Claude AI 辅助配置
-> - `scripts/**` — Python 工具脚本
-> - `docs/**` — 项目文档
-> - `src/**` — TypeScript 源码（已编译为 `out/`）
-> - `**/*.bak` — 词典备份文件（~13MB 冗余）
 
 ### 4.4 本地安装测试
 
 ```bash
-code --install-extension adhdgofly-highlight-*.vsix
+code --install-extension adhdgofly-ide-ext-*.vsix
 # 然后重启 VS Code，验证功能正常
 ```
 
@@ -190,7 +180,7 @@ git diff --stat
 vsce publish 0.3.0
 
 # 4. 成功后会返回 Marketplace 链接
-# Marketplace: https://marketplace.visualstudio.com/items?itemName=adhdgofly.adhdgofly-highlight
+# Marketplace: https://marketplace.visualstudio.com/items?itemName=adhdgofly.adhdgofly-ide-ext
 ```
 
 ### 5.3 常见错误
@@ -198,7 +188,7 @@ vsce publish 0.3.0
 | 错误 | 原因 | 解决 |
 |------|------|------|
 | `Failed Request: Unauthorized (401)` | PAT 过期或无效 | 重新生成 PAT，重新 `vsce login` |
-| `Extension id 'adhdgofly.adhdgofly-highlight' already exists` | 版本已发布 | 升级版本号再发布 |
+| `Extension id 'adhdgofly.adhdgofly-ide-ext' already exists` | 版本已发布 | 升级版本号再发布 |
 | `Missing publisher name` | `package.json` 无 publisher | 确认 `"publisher": "adhdgofly"` |
 | `Repository URI is not available` | `package.json` 缺少 repository | 添加 `"repository"` 字段 |
 
@@ -218,7 +208,7 @@ vsce publish 0.3.0
 ### 6.1 手动发布
 
 ```bash
-npx ovsx publish adhdgofly-highlight-*.vsix --pat <your-open-vsx-token>
+npx ovsx publish adhdgofly-ide-ext-*.vsix --pat <your-open-vsx-token>
 ```
 
 ### 6.2 自动化发布（GitHub Actions）
@@ -289,7 +279,7 @@ vsce package --no-yarn
 
 ```bash
 gh release create "$VERSION" \
-  adhdgofly-highlight-*.vsix \
+  adhdgofly-ide-ext-*.vsix \
   --title "ADHDGoFly Highlight $VERSION" \
   --notes "### 更新内容
 
@@ -301,33 +291,28 @@ gh release create "$VERSION" \
 
 ## 八、完整的发布流程（从 0 到 1）
 
-### 首次发布（当前完成状态）
+### 首次发布
 
 ```
-1. 注册账号（待完成 ⬜）
+1. 注册账号
    ├── VS Code: 用 Microsoft 账户登录 marketplace.visualstudio.com/manage
    ├── 创建 publisher "adhdgofly"
    ├── 生成 PAT 并保存
    └── Open VSX: 用 GitHub 登录 open-vsx.org，生成 Token
 
-2. 本地配置（已完成 ✅）
+2. 本地配置
    ├── npm install -g @vscode/vsce
-   ├── 版本已设为 1.0.0
-   ├── .vscodeignore 已优化（排除 .claude/ scripts/ .bak）
-   ├── LICENSE 已添加
-   └── repository 字段已补充
+   ├── vsce login adhdgofly
+   └── 确认 package.json version 为 1.0.0
 
-3. 打包与发布（打包已完成 ✅）
-   ├── npm run build                  →  ✅ 编译成功
-   ├── vsce package --no-yarn        →  ✅ VSIX 已生成（2.54 MB）
-   ├── 本地安装测试 .vsix             →  ⬜ 待安装验证
-   ├── vsce login adhdgofly          →  ⬜ 需要先注册 Publisher
-   ├── vsce publish 1.0.0            →  ⬜ 需要先 login
-   └── npx ovsx publish *.vsix --pat →  ⬜ 需要先获取 Token
+3. 打包与发布
+   ├── npm run build
+   ├── vsce package --no-yarn
+   ├── 本地安装测试 .vsix
+   ├── vsce publish 1.0.0
+   └── npx ovsx publish *.vsix --pat <token>
 
 4. 后续
-   ├── git remote add origin <url>  →  ⬜ 需要先创建 GitHub 仓库
-   ├── git push -u origin main      →  ⬜
    ├── git tag v1.0.0 && git push origin v1.0.0
    ├── gh release create v1.0.0 *.vsix --title "..."
    └── 在 Marketplace 管理页添加截图和描述
@@ -382,7 +367,7 @@ POS-based vocabulary highlighting extension for VS Code and compatible IDEs.
 
 ### Marketplace 元数据
 
-在 `package.json` 中补充（已完成 ✅，需要你确认/修改 GitHub URL）：
+在 `package.json` 中补充（可选但推荐）：
 
 ```json
 {
@@ -393,11 +378,11 @@ POS-based vocabulary highlighting extension for VS Code and compatible IDEs.
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<你的用户名>/adhdgofly-ide-ext"   ← 需修改
+    "url": "https://github.com/your-org/dict-app"
   },
-  "homepage": "https://github.com/<你的用户名>/adhdgofly-ide-ext",
+  "homepage": "...",
   "bugs": {
-    "url": "https://github.com/<你的用户名>/adhdgofly-ide-ext/issues"
+    "url": "https://github.com/your-org/dict-app/issues"
   },
   "license": "MIT",
   "keywords": ["vocabulary", "highlight", "language-learning", "annotation"]
@@ -425,43 +410,6 @@ POS-based vocabulary highlighting extension for VS Code and compatible IDEs.
 
 - [ ] open-vsx.org 上扩展可搜索到
 - [ ] 在 VSCodium 中安装测试通过
-
----
-
-## 十一、v1.0.0 当前完成状态
-
-### 已完成 ✅
-
-- [x] 项目从 dict-app 拆分为独立仓库（`~/Documents/GitHub/adhdgofly-ide-ext/`）
-- [x] git 仓库已初始化（`main` 分支，3 commits）
-- [x] `package.json` 版本升级到 `1.0.0`
-- [x] 补充 `repository` 字段和 `license` 字段
-- [x] `.vscodeignore` 优化（排除 `.claude/`、`scripts/`、`docs/`、`**/*.bak`）
-- [x] `LICENSE` 文件已添加（MIT）
-- [x] VSIX 已打包成功（2.54 MB, 38 files）
-
-### 待完成 ⬜
-
-**§ 注册与 Token**
-- [ ] 访问 [VS Code Marketplace 管理页](https://marketplace.visualstudio.com/manage)
-- [ ] 用 Microsoft 账户登录，创建 publisher `adhdgofly`
-- [ ] 生成 PAT，保存
-- [ ] 访问 [Open VSX](https://open-vsx.org)，用 GitHub 登录
-- [ ] 生成 Open VSX Token，保存
-
-**§ 本地配置**
-- [ ] 执行 `vsce login adhdgofly`，输入 PAT
-- [ ] 用 `code --install-extension` 安装 `.vsix` 验证功能
-
-**§ 发布**
-- [ ] 创建 GitHub 仓库并 push
-- [ ] 执行 `vsce publish 1.0.0` 发布到 Marketplace
-- [ ] 执行 `npx ovsx publish *.vsix --pat <token>` 发布到 Open VSX
-- [ ] 打 tag 并创建 GitHub Release
-
-**§ 展示**
-- [ ] 在 Marketplace 管理页上传截图（英文 + 中文文档高亮效果）
-- [ ] 补充 `galleryBanner` 和 `homepage` 字段
 
 ---
 

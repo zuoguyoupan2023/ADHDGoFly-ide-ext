@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('adhdgofly.exportDict', async () => {
       if (!dictManager) return
       const langs = dictManager.getLoadedLanguages()
-      if (langs.length === 0) { vscode.window.showWarningMessage('ADHDGoFly: 无可用词典'); return }
+      if (langs.length === 0) { vscode.window.showWarningMessage('adhdgofly-ide-ext: 无可用词典'); return }
       const lang = await vscode.window.showQuickPick(langs, { placeHolder: '选择要导出的语言' })
       if (!lang) return
       const json = dictManager.exportDict(lang, lang.toUpperCase())
@@ -42,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
       })
       if (uri) {
         await vscode.workspace.fs.writeFile(uri, Buffer.from(json, 'utf-8'))
-        vscode.window.showInformationMessage(`ADHDGoFly: 词典已导出 → ${uri.fsPath}`)
+        vscode.window.showInformationMessage(`adhdgofly-ide-ext: 词典已导出 → ${uri.fsPath}`)
       }
     }),
   )
@@ -57,14 +57,14 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         await batchProcessor!.processSingleFile(uri)
       } catch (err) {
-        vscode.window.showErrorMessage('ADHDGoFly: 处理文件失败 -- ' + (err as Error).message)
+        vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理文件失败 -- ' + (err as Error).message)
       }
     }),
     vscode.commands.registerCommand('adhdgofly.processFolder', async (uri: vscode.Uri) => {
       try {
         await batchProcessor!.processFolder(uri)
       } catch (err) {
-        vscode.window.showErrorMessage('ADHDGoFly: 处理文件夹失败 -- ' + (err as Error).message)
+        vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理文件夹失败 -- ' + (err as Error).message)
       }
     }),
     vscode.commands.registerCommand('adhdgofly.processProject', async () => {
@@ -73,7 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!folders) { vscode.window.showWarningMessage('未打开任何项目'); return }
         await batchProcessor!.processFolder(folders[0].uri)
       } catch (err) {
-        vscode.window.showErrorMessage('ADHDGoFly: 处理项目失败 -- ' + (err as Error).message)
+        vscode.window.showErrorMessage('adhdgofly-ide-ext: 处理项目失败 -- ' + (err as Error).message)
       }
     }),
   )

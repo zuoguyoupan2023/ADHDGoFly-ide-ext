@@ -205,11 +205,11 @@ export function createDecorator(
       if (!editor) return
       const selection = editor.selection
       if (selection.isEmpty) {
-        vscode.window.showInformationMessage('ADHDGoFly: Please select some text first.')
+        vscode.window.showInformationMessage('adhdgofly-ide-ext: Please select some text first.')
         return
       }
       const text = editor.document.getText(selection)
-      vscode.window.showInformationMessage(`ADHDGoFly: Annotating "${text.slice(0, 40)}..."`)
+      vscode.window.showInformationMessage(`adhdgofly-ide-ext: Annotating "${text.slice(0, 40)}..."`)
     },
     dispose() {
       for (const dt of decorationTypes.values()) dt.dispose()

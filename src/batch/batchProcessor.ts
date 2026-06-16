@@ -170,7 +170,7 @@ export class BatchProcessor {
   async processFolder(uri: vscode.Uri): Promise<void> {
     const files = await this.scanFolder(uri)
     if (files.length === 0) {
-      vscode.window.showInformationMessage('ADHDGoFly: 没有找到受支持的文件')
+      vscode.window.showInformationMessage('adhdgofly-ide-ext: 没有找到受支持的文件')
       return
     }
 
@@ -201,7 +201,7 @@ export class BatchProcessor {
 
     await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: 'ADHDGoFly: 处理文件中...',
+      title: 'adhdgofly-ide-ext: 处理文件中...',
       cancellable: true,
     }, async (_progress, token) => {
       this.sidePanel.sendBatchProgress({ completed: 0, total })

@@ -1,5 +1,5 @@
 /**
- * i18n — minimal translation table for ADHDGoFly side panel.
+ * i18n — minimal translation table for adhdgofly-ide-ext side panel.
  * Detects VS Code language from <html lang> attribute.
  * Plain JS — NO TypeScript annotations.
  */
