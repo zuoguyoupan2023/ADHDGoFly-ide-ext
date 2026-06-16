@@ -59,11 +59,10 @@ export function segmentSpaceDelimited(text: string, dict: DictMap, lang: Support
  */
 export function segmentCJK(text: string, dict: DictMap, maxLen = 8): Segment[] {
   const segments: Segment[] = []
-  const chars = [...text]
   let i = 0
 
-  while (i < chars.length) {
-    const c = chars[i]
+  while (i < text.length) {
+    const c = text[i]
 
     // Skip whitespace and punctuation
     if (/[\s\p{P}]/u.test(c)) { i++; continue }
@@ -76,8 +75,8 @@ export function segmentCJK(text: string, dict: DictMap, maxLen = 8): Segment[] {
     // ASCII word block
     if (/[a-zA-Z0-9]/.test(c)) {
       const start = i
-      while (i < chars.length && /[a-zA-Z0-9]/.test(chars[i])) i++
-      const word = chars.slice(start, i).join('').toLowerCase()
+      while (i < text.length && /[a-zA-Z0-9]/.test(text[i])) i++
+      const word = text.slice(start, i).toLowerCase()
       const entry = dict[word] ?? null
       const posStr = getPosString(entry as { pos: string[] } | string | null)
       segments.push({ word, start, end: i, is_in_dict: posStr !== null, pos: posStr })
@@ -85,11 +84,11 @@ export function segmentCJK(text: string, dict: DictMap, maxLen = 8): Segment[] {
     }
 
     // CJK: forward max matching
-    const maxLookup = Math.min(maxLen, chars.length - i)
+    const maxLookup = Math.min(maxLen, text.length - i)
     let matched = false
 
     for (let len = maxLookup; len >= 1; len--) {
-      const word = chars.slice(i, i + len).join('')
+      const word = text.slice(i, i + len)
       const entry = dict[word] ?? null
       if (entry != null) {
         const posStr = getPosString(entry as { pos: string[] } | string | null)
@@ -140,11 +139,15 @@ export function segmentMixed(
   maxLen = 8,
 ): Segment[] {
   const segments: Segment[] = []
-  const chars = [...text]
   let pos = 0
 
-  while (pos < chars.length) {
-    const c = chars[pos]
+  // Use text[pos] (UTF-16 code unit indexing) to stay consistent with
+  // VS Code's TextDocument.getText() and offsetAt() — both use UTF-16.
+  // Characters outside the BMP (emoji, rare CJK) use surrogate pairs
+  // (2 code units each), so each surrogate unit is individually tested
+  // and skipped by the non-ASCII/non-CJK fallthrough below.
+  while (pos < text.length) {
+    const c = text[pos]
 
     // Skip whitespace and punctuation
     if (/[\s\p{P}]/u.test(c)) { pos++; continue }
@@ -157,8 +160,8 @@ export function segmentMixed(
     // ── ASCII block (Latin) ────────────────────────────────────────
     if (/[a-zA-Z0-9]/.test(c)) {
       const start = pos
-      while (pos < chars.length && /[a-zA-Z0-9]/.test(chars[pos])) pos++
-      const word = chars.slice(start, pos).join('').toLowerCase()
+      while (pos < text.length && /[a-zA-Z0-9]/.test(text[pos])) pos++
+      const word = text.slice(start, pos).toLowerCase()
 
       let entry: { pos: string[] } | string | null = null
       if (enEnabled) {
@@ -179,11 +182,11 @@ export function segmentMixed(
     }
 
     // ── CJK: forward max matching ──────────────────────────────────
-    const maxLookup = Math.min(maxLen, chars.length - pos)
+    const maxLookup = Math.min(maxLen, text.length - pos)
     let matched = false
 
     for (let len = maxLookup; len >= 1; len--) {
-      const word = chars.slice(pos, pos + len).join('')
+      const word = text.slice(pos, pos + len)
       const entry = cjkDict[word] ?? null
       if (entry != null) {
         const posStr = getPosString(entry)
