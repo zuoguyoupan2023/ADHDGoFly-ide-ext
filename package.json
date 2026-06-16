@@ -3,7 +3,7 @@
   "displayName": "adhdgofly-ide-ext",
   "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
   "version": "1.0.0",
-  "publisher": "adhdgofly",
+  "publisher": "ADHDGoFly",
   "engines": {
     "vscode": "^1.85.0"
   },
