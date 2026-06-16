@@ -6,7 +6,8 @@ import * as vscode from 'vscode'
 import { debounce } from '../utils/debounce'
 import { loadConfig } from './config'
 import { shouldProcessDocument, isLargeFile } from './activationGuard'
-import { getAnnotatableRanges, getMarkdownCodeBlockRanges } from './textMate'
+import { getAnnotatableRanges } from './textMate'
+import { sanitizeCodeBlocks } from '../highlightEngine/index'
 import type { HighlightEngine } from '../highlightEngine/index'
 import type { PosColorClass } from '../highlightEngine/types'
 import type { SidePanelProvider } from './sidePanel'
@@ -103,31 +104,24 @@ export function createDecorator(
       text = editor.document.getText()
     }
 
+    // ── Pre-process text for markdown files ─────────────────────────
+    // Strip fenced code blocks and inline code spans (replace with spaces
+    // to preserve character offsets), so code tokens never enter the engine.
+    const langId = editor.document.languageId
+    let processText = text
+    let sidePanelText = text  // side panel gets the original text for word list
+    if (langId === 'markdown') {
+      processText = sanitizeCodeBlocks(text)
+    }
+
     // Apply disabled dict filter before processing
     engine.setDisabledDicts(config.disabledDicts || [])
 
     const t1 = Date.now()
-    let decorated = engine.process(text, config)
+    let decorated = engine.process(processText, config)
 
-    // ── Filter decorated words based on document type ───────────────
-    const langId = editor.document.languageId
-
-    if (langId === 'markdown') {
-      // Markdown: skip words inside fenced code blocks and inline code spans
-      const skipRanges = getMarkdownCodeBlockRanges(editor.document)
-      if (skipRanges.length > 0) {
-        const skipOffsets = skipRanges.map(r => ({
-          start: editor.document.offsetAt(r.start),
-          end: editor.document.offsetAt(r.end),
-        }))
-        decorated = decorated.filter(w => {
-          const absStart = w.start + baseOffset
-          const absEnd = w.end + baseOffset
-          return !skipOffsets.some(r => absStart >= r.start && absEnd <= r.end)
-        })
-      }
-    } else if (langId !== 'plaintext') {
-      // Code files: only keep words inside comments and string literals
+    // ── Code files: restrict to comments/strings ────────────────────
+    if (langId !== 'markdown' && langId !== 'plaintext') {
       const annotatable = getAnnotatableRanges(editor.document)
       if (annotatable && annotatable.length > 0) {
         const annotatableOffsets = annotatable.map(r => ({
@@ -147,7 +141,7 @@ export function createDecorator(
 
     // Build line offset index once — O(n chars), then each lookup is O(log lines)
     const t2 = Date.now()
-    const lineOffsets = buildLineOffsets(text)
+    const lineOffsets = buildLineOffsets(text)  // Use original text offsets for decoration positioning
 
     const rangesByClass = new Map<PosColorClass, vscode.Range[]>()
     for (const cls of decorationTypes.keys()) rangesByClass.set(cls, [])

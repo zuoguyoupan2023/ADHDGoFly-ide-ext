@@ -8,6 +8,22 @@
  *
  * Ported from dict-app/src-tauri/src/segmenter.rs `segment_with_lang()`.
  */
+
+/**
+ * Strip markdown code block content from text, replacing with spaces
+ * while preserving newline positions so line offsets remain valid.
+ * Supports:
+ * - Fenced code blocks: ``` ... ```
+ * - Inline code spans: `code`
+ */
+export function sanitizeCodeBlocks(text: string): string {
+  // Replace fenced code blocks, preserving newlines for offset accuracy
+  let result = text.replace(/```[\s\S]*?```/g, m => m.replace(/[^\n]/g, ' '))
+  // Replace inline code spans (\n not possible in inline spans)
+  result = result.replace(/(?<!`)`[^`\n]+`(?!`)/g, m => ' '.repeat(m.length))
+  return result
+}
+
 import type { DecoratedWord, SupportedLang } from './types'
 import { isSpaceDelimited } from './language'
 import { segmentMixed } from './segmenter'
