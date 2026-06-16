@@ -6,6 +6,7 @@ import * as vscode from 'vscode'
 import { debounce } from '../utils/debounce'
 import { loadConfig } from './config'
 import { shouldProcessDocument, isLargeFile } from './activationGuard'
+import { getAnnotatableRanges, getMarkdownCodeBlockRanges } from './textMate'
 import type { HighlightEngine } from '../highlightEngine/index'
 import type { PosColorClass } from '../highlightEngine/types'
 import type { SidePanelProvider } from './sidePanel'
@@ -106,7 +107,43 @@ export function createDecorator(
     engine.setDisabledDicts(config.disabledDicts || [])
 
     const t1 = Date.now()
-    const decorated = engine.process(text, config)
+    let decorated = engine.process(text, config)
+
+    // ── Filter decorated words based on document type ───────────────
+    const langId = editor.document.languageId
+
+    if (langId === 'markdown') {
+      // Markdown: skip words inside fenced code blocks and inline code spans
+      const skipRanges = getMarkdownCodeBlockRanges(editor.document)
+      if (skipRanges.length > 0) {
+        const skipOffsets = skipRanges.map(r => ({
+          start: editor.document.offsetAt(r.start),
+          end: editor.document.offsetAt(r.end),
+        }))
+        decorated = decorated.filter(w => {
+          const absStart = w.start + baseOffset
+          const absEnd = w.end + baseOffset
+          return !skipOffsets.some(r => absStart >= r.start && absEnd <= r.end)
+        })
+      }
+    } else if (langId !== 'plaintext') {
+      // Code files: only keep words inside comments and string literals
+      const annotatable = getAnnotatableRanges(editor.document)
+      if (annotatable && annotatable.length > 0) {
+        const annotatableOffsets = annotatable.map(r => ({
+          start: editor.document.offsetAt(r.start),
+          end: editor.document.offsetAt(r.end),
+        }))
+        decorated = decorated.filter(w => {
+          const absStart = w.start + baseOffset
+          const absEnd = w.end + baseOffset
+          return annotatableOffsets.some(r => absStart >= r.start && absEnd <= r.end)
+        })
+      } else if (annotatable && annotatable.length === 0) {
+        // No comments/strings in this file — nothing to highlight
+        decorated = []
+      }
+    }
 
     // Build line offset index once — O(n chars), then each lookup is O(log lines)
     const t2 = Date.now()
