@@ -2,27 +2,26 @@
 
 POS-based vocabulary highlighting for VS Code, Cursor, Windsurf, Kiro, and Trae. Automatically highlights nouns, verbs, adjectives, and adverbs in markdown, plain text, and code comments.
 
-> **Screenshots**: *TODO — add screenshot after testing*
-
 ## Features
 
 - **Auto-highlight** — open a `.md` / `.txt` file and see POS-colored words appear within 1 second
 - **Multi-language** — English (noun green, verb red, adjective purple) and Chinese (BMM segmentation)
-- **Mixed-language text** — handles `我想用chatgpt` and `- ❌ 不支持 streaming` without language classification
+- **Mixed-language text** — handles `我想用chatgpt` without language classification
 - **Code file support** — highlights natural language inside code comments and strings only (JS/TS/Python/Go/HTML)
 - **Side panel** — real-time word frequency list with POS stats, sortable by frequency/alpha/POS
 - **Dictionary management** — built-in en/zh dictionaries; install community dictionaries; create your own from annotations
 - **Self-built dictionaries** — save any document's vocabulary as a reusable dictionary with toggle on/off
 - **AI POS judging** — configure any OpenAI-compatible API to auto-suggest POS tags for unknown words
 - **POS filter** — toggle noun/verb/adjective chips to filter the annotation list and editor highlights simultaneously
+- **Code block / inline code filtering** — code fence and backtick content is automatically excluded from highlighting
+- **Emoji-safe** — emoji characters are properly skipped without offset misalignment
 
 ## Quick Start
 
-Install from VS Code Marketplace, or:
+Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ADHDGoFly.adhdgofly-ide-ext), or:
 
 ```bash
-vsce package --no-yarn
-# VS Code → Extensions → ... → Install from VSIX
+code --install-extension adhdgofly-ide-ext-1.0.0.vsix
 ```
 
 ## Settings
@@ -38,19 +37,6 @@ vsce package --no-yarn
 | `adhdgofly.posFilter` | all | Which POS categories to show |
 | `adhdgofly.disabledDicts` | `[]` | Dictionary IDs to disable |
 | `adhdgofly.aiEnabled` | `true` | Enable AI POS judging |
-
-## Development
-
-```bash
-npm install
-npm run compile
-# Press F5 to launch extension development host
-npm test              # Run unit tests (18 tests)
-```
-
-## Dictionary Format
-
-See [`docs/006-dict-format.md`](docs/006-dict-format.md) for the shared JSON schema used across all adhdgofly-ide-ext projects.
 
 ## Architecture
 
@@ -78,6 +64,8 @@ src/
 
 ## Related Projects
 
-- [dict-app](https://github.com/adhdgofly/dict-app) — Desktop dictionary tool (Tauri)
-- [adhdgoflyplugin](https://github.com/adhdgofly/adhdgoflyplugin) — Browser extension
-- [dictionary.adhdgofly.online](https://dictionary.adhdgofly.online) — Community dictionary service
+- **adhdgoflyplugin** — Browser extension available on [Microsoft Edge Addons](https://microsoftedge.microsoft.com/addons/) and [Google Chrome Web Store](https://chromewebstore.google.com/). Provides POS highlighting for web pages in the browser.
+
+## License
+
+MIT

@@ -4,6 +4,7 @@
   "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
   "version": "1.0.0",
   "publisher": "ADHDGoFly",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -12,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/burenweiye/adhdgofly-ide-ext"
+    "url": "https://github.com/zuoguyoupan2023/adhdgofly-ide-ext"
   },
   "license": "MIT",
   "activationEvents": [
