@@ -1,4 +1,4 @@
-# ADHDGoFly Highlight
+# ADHDGoFlY
 
 POS-based vocabulary highlighting for VS Code, Cursor, Windsurf, Kiro, and Trae. Automatically highlights nouns, verbs, adjectives, and adverbs in markdown, plain text, and code comments.
 

@@ -1,6 +1,6 @@
 {
   "name": "adhdgofly-highlight",
-  "displayName": "ADHDGoFly Highlight",
+  "displayName": "ADHDGoFlY",
   "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
   "version": "1.0.0",
   "publisher": "adhdgofly",
@@ -40,7 +40,7 @@
       "activitybar": [
         {
           "id": "adhdgofly-sidebar",
-          "title": "ADHDGoFly",
+          "title": "ADHDGoFlY",
           "icon": "icon.svg"
         }
       ]
@@ -50,7 +50,7 @@
         {
           "type": "webview",
           "id": "adhdgofly.panel",
-          "name": "ADHDGoFly Highlight"
+          "name": "ADHDGoFlY"
         }
       ]
     },
