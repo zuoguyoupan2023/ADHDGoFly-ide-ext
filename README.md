@@ -1,8 +1,16 @@
 # adhdgofly-ide-ext
 
-POS-based vocabulary highlighting for VS Code, Cursor, Windsurf, Kiro, and Trae. Automatically highlights nouns, verbs, adjectives, and adverbs in markdown, plain text, and code comments.
+Automatically highlights nouns, verbs, and adjectives in any text — so you can grasp the key points of an article at a glance without reading every word.
 
-基于词性（POS）标注的 IDE 词汇着色扩展，兼容 VS Code / Cursor / Windsurf / Kiro / Trae。自动将名词、动词、形容词、副词以不同颜色高亮显示。
+Read faster, understand deeper. Instantly distinguish actions from objects, descriptions from details. Designed for language learners, non-native readers, and anyone who wants to absorb written content more efficiently.
+
+Works in markdown, plain text, and code comments across VS Code, Cursor, Windsurf, Kiro, and Trae. Whether you're studying a foreign language, reviewing technical docs, or navigating a codebase — ADHDGoFly helps you focus on what matters.
+
+对文章中的名词、动词、形容词自动着色，一眼看清重点，不用逐字阅读。
+
+更快阅读，更深理解。一眼看出谁是动作、谁是对象、谁是修饰。适合语言学习者、非母语阅读者和所有希望高效吸收信息的人。
+
+无论你在学外语、读技术文档还是浏览代码，ADHDGoFly 帮你抓住重点。兼容 Markdown、纯文本和代码注释，支持 VS Code / Cursor / Windsurf / Kiro / Trae。
 
 [English](#features) | [中文](#功能)
 
