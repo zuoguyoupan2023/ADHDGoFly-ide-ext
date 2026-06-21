@@ -82,8 +82,11 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
 
   /**
    * Inject posFilter into the markdown preview by inserting a hidden HTML comment
-   * at the start of the active markdown document. The comment is kept permanently
-   * (invisible to the user) so the highlighter can read it on every re-render.
+   * at the start of the active markdown document.
+   *
+   * Only inserts when a markdown preview is actually open (checked via tab groups).
+   * The comment is bilingual and explains its purpose. It's auto-removed on save
+   * by onWillSaveTextDocument in extension.ts.
    *
    * This is necessary because the preview WebView's CSP (nonce-based script-src,
    * connect-src 'none') blocks all other communication channels.
@@ -92,20 +95,39 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
     const editor = vscode.window.activeTextEditor
     if (!editor || editor.document.languageId !== 'markdown') return
 
-    const doc = editor.document
-    const comment = `<!-- adhdgofly-posfilter:${JSON.stringify(filter)} -->`
+    const docUri = editor.document.uri.toString()
 
-    // Check if comment already exists at line 0
-    const firstLine = doc.lineAt(0)
+    // Only insert if a markdown preview is actually open for this document
+    let previewOpen = false
+    for (const group of vscode.window.tabGroups.all) {
+      for (const tab of group.tabs) {
+        if (tab.input instanceof vscode.TabInputCustom) {
+          const custom = tab.input as vscode.TabInputCustom
+          if (custom.viewType.toLowerCase().includes('markdown') && custom.uri.toString() === docUri) {
+            previewOpen = true
+            break
+          }
+        }
+      }
+      if (previewOpen) break
+    }
+    if (!previewOpen) return
+
+    // Bilingual comment — language matches IDE UI language
+    const isZh = vscode.env.language.startsWith('zh')
+    const filterJson = JSON.stringify(filter)
+    const comment = isZh
+      ? `<!-- adhdgofly-posfilter:${filterJson} 预览高亮辅助 — 保存时自动清除，无需手动删除 -->`
+      : `<!-- adhdgofly-posfilter:${filterJson} Preview highlight helper — auto-removed on save -->`
+
+    const firstLine = editor.document.lineAt(0)
     const re = /^<!-- adhdgofly-posfilter:/
 
     if (re.test(firstLine.text)) {
-      // Replace existing comment value
       await editor.edit(b =>
         b.replace(firstLine.rangeIncludingLineBreak, comment + '\n')
       )
     } else {
-      // Insert new comment at start
       await editor.edit(b =>
         b.insert(new vscode.Position(0, 0), comment + '\n')
       )

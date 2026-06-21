@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
       e.waitUntil(Promise.resolve([
         new vscode.TextEdit(
           doc.lineAt(0).rangeIncludingLineBreak,
-          firstLine.replace(/^<!-- adhdgofly-posfilter:\[.*?\] -->\n?/, '')
+          firstLine.replace(/^<!-- adhdgofly-posfilter:.*?-->\n?/, '')
         ),
       ]))
     }),
