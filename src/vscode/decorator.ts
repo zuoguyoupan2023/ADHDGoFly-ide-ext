@@ -12,25 +12,45 @@ import type { HighlightEngine } from '../highlightEngine/index'
 import type { PosColorClass } from '../highlightEngine/types'
 import type { SidePanelProvider } from './sidePanel'
 
-const POS_COLORS: Record<PosColorClass, { color: string; bg: string; border: string }> = {
-  'pos-n':     { color: '#4ade80', bg: 'rgba(34,197,94,0.15)',    border: 'rgba(34,197,94,0.35)' },
-  'pos-v':     { color: '#f87171', bg: 'rgba(239,68,68,0.15)',    border: 'rgba(239,68,68,0.35)' },
-  'pos-a':     { color: '#c084fc', bg: 'rgba(168,85,247,0.15)',   border: 'rgba(168,85,247,0.35)' },
-  'pos-other': { color: '#9ca3af', bg: 'rgba(156,163,175,0.12)',  border: 'rgba(156,163,175,0.3)' },
+/**
+ * Color palettes for POS decorations.
+ * Each palette has dark and light variants — VS Code picks the right one
+ * based on the current editor theme. Synced with preview palettes in
+ * src/preview/highlighter.ts and docs/013-dual-theme-preview-colors.md.
+ */
+interface PaletteEntry { color: string; bg: string; border: string }
+
+const POS_COLORS: Record<PosColorClass, { dark: PaletteEntry; light: PaletteEntry }> = {
+  'pos-n': {
+    dark:  { color: '#4ade80', bg: 'rgba(34,197,94,0.15)',    border: 'rgba(34,197,94,0.35)' },
+    light: { color: '#059669', bg: 'rgba(5,150,101,0.15)',    border: 'rgba(5,150,101,0.35)' },
+  },
+  'pos-v': {
+    dark:  { color: '#f87171', bg: 'rgba(239,68,68,0.15)',    border: 'rgba(239,68,68,0.35)' },
+    light: { color: '#dc2626', bg: 'rgba(220,38,38,0.15)',    border: 'rgba(220,38,38,0.35)' },
+  },
+  'pos-a': {
+    dark:  { color: '#c084fc', bg: 'rgba(168,85,247,0.15)',   border: 'rgba(168,85,247,0.35)' },
+    light: { color: '#7c3aed', bg: 'rgba(124,58,237,0.15)',   border: 'rgba(124,58,237,0.35)' },
+  },
+  'pos-other': {
+    dark:  { color: '#9ca3af', bg: 'rgba(156,163,175,0.12)',  border: 'rgba(156,163,175,0.3)' },
+    light: { color: '#6b7280', bg: 'rgba(107,114,128,0.12)',  border: 'rgba(107,114,128,0.3)' },
+  },
 }
 
 const MAX_DECORATIONS = 5000
 
-function buildDecorationOptions(style: string, colors: { color: string; bg: string; border: string }): vscode.DecorationRenderOptions {
+function buildDecorationOptions(style: string, colors: { dark: PaletteEntry; light: PaletteEntry }): vscode.DecorationRenderOptions {
   if (style === 'highlight') {
     return {
-      backgroundColor: colors.bg,
-      border: `1px solid ${colors.border}`,
+      dark: { backgroundColor: colors.dark.bg, border: `1px solid ${colors.dark.border}` },
+      light: { backgroundColor: colors.light.bg, border: `1px solid ${colors.light.border}` },
       borderRadius: '2px',
     }
   }
   // 'color' mode (default) — text color only
-  return { color: colors.color }
+  return { dark: { color: colors.dark.color }, light: { color: colors.light.color } }
 }
 
 /**
