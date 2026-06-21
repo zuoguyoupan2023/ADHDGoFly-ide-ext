@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 (2026-06-21)
+
+### Fixed / 修复
+- Regenerated extension icon from `logo.svg` to ensure the logo appears correctly in VS Code marketplace (从 `logo.svg` 重新生成扩展图标，确保市场图标正确显示)
+
 ## 1.0.1 (2026-06-17)
 
 ### Added / 新增

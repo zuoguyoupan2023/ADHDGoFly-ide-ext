@@ -2,7 +2,7 @@
   "name": "adhdgofly-ide-ext",
   "displayName": "adhdgofly-ide-ext",
   "description": "POS-based vocabulary highlighting for markdown, code comments, and plain text",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "ADHDGoFly",
   "icon": "icon.png",
   "engines": {

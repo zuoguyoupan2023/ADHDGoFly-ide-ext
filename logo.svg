@@ -5,10 +5,6 @@
   <!-- 白色圆角矩形背景 -->
   <rect x="12" y="12" width="1000" height="1000" rx="120" fill="white"/>
   
-  <!-- 临时边框 - 用于查看logo边界 -->
-  <rect x="0" y="0" width="1024" height="1024" fill="none" stroke="#FF0000" stroke-width="1" opacity="0.5"/>
-  
-  
   <!-- 
     可调整的参数：
     - 三角形边长: 300 (triangleSize)
