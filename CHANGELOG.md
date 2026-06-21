@@ -3,6 +3,7 @@
 ## 1.0.2 (2026-06-21)
 
 ### Added / 新增
+- **词性筛选即时开关** — 侧面板点击 名/动/形/其他 按钮，编辑器高亮即时显隐（不重新分词），预览同步取消/恢复着色
 - **Markdown 预览高亮** — 在 Markdown 渲染预览（`Ctrl+Shift+V`）中自动对名词/动词/形容词着色，与编辑器内高亮一致
   - 中英文全量词典内嵌（~7.8MB），首次打开即生效
   - 使用 `segmentMixed` 逐字符调度，支持中英混排文本
@@ -18,6 +19,7 @@
 
 ### Fixed / 修复
 - Regenerated extension icon from `logo.svg` to ensure the logo appears correctly in VS Code marketplace (从 `logo.svg` 重新生成扩展图标，确保市场图标正确显示)
+- 侧面板语言跟随系统/IDE 语言设置，中文环境默认显示中文界面（修复部分 IDE 始终显示英文的问题）
 
 ## 1.0.1 (2026-06-17)
 

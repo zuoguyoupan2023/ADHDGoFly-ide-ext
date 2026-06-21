@@ -558,6 +558,15 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
     const i18nUri  = webview.asWebviewUri(vscode.Uri.joinPath(webviewDir, 'i18n.js'))
     const iconsUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewDir, 'icons.js'))
 
+    // Determine user locale from setting, fall back to VS Code UI language
+    const cfg = loadConfig()
+    let localeValue = cfg.locale
+    if (localeValue === 'auto') {
+      // Detect from VS Code environment
+      const uiLang = vscode.env.language
+      localeValue = uiLang.startsWith('zh') ? 'zh' : 'en'
+    }
+
     // Inline the HTML template (panel.html references these URIs at runtime)
     const htmlPath = path.join(this.extensionUri.fsPath, 'webview', 'panel.html')
     let html = fs.readFileSync(htmlPath, 'utf-8')
@@ -567,6 +576,8 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
       .replace(/{{JS_URI}}/g,  jsUri.toString())
       .replace(/{{I18N_URI}}/g,  i18nUri.toString())
       .replace(/{{ICONS_URI}}/g, iconsUri.toString())
+      // Inject locale into the hidden element so i18n.js picks it up immediately
+      .replace(/data-value="auto"/, `data-value="${localeValue}"`)
     return html
   }
 }
