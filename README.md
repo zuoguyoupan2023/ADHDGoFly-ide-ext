@@ -37,7 +37,7 @@ Works in markdown, plain text, and code comments across VS Code, Cursor, Windsur
 Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ADHDGoFly.adhdgofly-ide-ext), or:
 
 ```bash
-code --install-extension adhdgofly-ide-ext-1.0.0.vsix
+code --install-extension adhdgofly-ide-ext-2026.6.21.vsix
 ```
 
 ## Settings
@@ -77,7 +77,7 @@ code --install-extension adhdgofly-ide-ext-1.0.0.vsix
 从 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ADHDGoFly.adhdgofly-ide-ext) 安装，或：
 
 ```bash
-code --install-extension adhdgofly-ide-ext-1.0.0.vsix
+code --install-extension adhdgofly-ide-ext-2026.6.21.vsix
 ```
 
 ## 配置项
