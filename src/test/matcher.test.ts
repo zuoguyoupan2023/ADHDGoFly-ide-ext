@@ -11,12 +11,12 @@ const segments: Segment[] = [
 
 describe('matchSegments', () => {
   it('filters by minWordLength', () => {
-    const result = matchSegments(segments, 2, ['n', 'v', 'adj', 'adv', 'other'])
+    const result = matchSegments(segments, 2, ['n', 'v', 'a', 'other'])
     expect(result.find(w => w.word === 'a')).toBeUndefined()
   })
 
   it('assigns correct color classes', () => {
-    const result = matchSegments(segments, 2, ['n', 'v', 'adj', 'adv', 'other'])
+    const result = matchSegments(segments, 2, ['n', 'v', 'a', 'other'])
     expect(result.find(w => w.word === 'quick')?.colorClass).toBe('pos-a')
     expect(result.find(w => w.word === 'fox')?.colorClass).toBe('pos-n')
     expect(result.find(w => w.word === 'jumps')?.colorClass).toBe('pos-v')

@@ -102,6 +102,7 @@ export function createDecorator(
   function applyDecorations(editor: vscode.TextEditor) {
     const t0 = Date.now()
     const config = loadConfig()
+    console.log('[ADHDGoFly] applyDecorations start, posFilter:', JSON.stringify(config.posFilter))
 
     if (!config.enabled || !shouldProcessDocument(editor.document)) {
       clearDecorations(editor)
@@ -137,8 +138,11 @@ export function createDecorator(
     // Apply disabled dict filter before processing
     engine.setDisabledDicts(config.disabledDicts || [])
 
-    const t1 = Date.now()
-    let decorated = engine.process(processText, config)
+    // Run engine WITHOUT posFilter to get ALL words for toggle support.
+    // We'll filter for display below. The full range set is stored in
+    // lastRangesByClass so setPosFilter can toggle POS instantly.
+    const posFilter = config.posFilter
+    let decorated = engine.process(processText, { ...config, posFilter: ['n', 'v', 'a', 'other'] })
 
     // ── Code files: restrict to comments/strings ────────────────────
     if (langId !== 'markdown' && langId !== 'plaintext') {
@@ -163,36 +167,53 @@ export function createDecorator(
     const t2 = Date.now()
     const lineOffsets = buildLineOffsets(text)  // Use original text offsets for decoration positioning
 
-    const rangesByClass = new Map<PosColorClass, vscode.Range[]>()
-    for (const cls of decorationTypes.keys()) rangesByClass.set(cls, [])
+    // Build ranges for ALL POS classification (stored for toggle support)
+    const allRangesByClass = new Map<PosColorClass, vscode.Range[]>()
+    for (const cls of decorationTypes.keys()) allRangesByClass.set(cls, [])
 
-    let total = 0
     for (const word of decorated) {
-      if (total >= MAX_DECORATIONS) break
-      const ranges = rangesByClass.get(word.colorClass)
+      const ranges = allRangesByClass.get(word.colorClass)
       if (!ranges) continue
-
-      // Use our O(log n) lookup instead of VS Code's O(n) positionAt()
       const startPos = offsetToPosition(word.start, lineOffsets)
       const endPos = offsetToPosition(word.end, lineOffsets)
       ranges.push(new vscode.Range(startPos, endPos))
-      total++
     }
 
-    // Store ranges per class for instant toggle via setPosFilter
-    const editorScopedRanges = new Map<PosColorClass, vscode.Range[]>()
-    for (const [cls, ranges] of rangesByClass) {
-      editorScopedRanges.set(cls, [...ranges])
+    // Persist full ranges for instant toggle (overwrite to catch document edits)
+    lastRangesByClass.set(editor.document.uri.toString(), allRangesByClass)
+    console.log('[ADHDGoFly] applyDecorations: stored ranges, pos-n:', allRangesByClass.get('pos-n')?.length ?? 0, 'pos-v:', allRangesByClass.get('pos-v')?.length ?? 0)
+
+    // Filter to only visible POS for actual display
+    const displayRanges = new Map<PosColorClass, vscode.Range[]>()
+    for (const [cls, ranges] of allRangesByClass) {
+      let filterKey: string
+      if (cls === 'pos-n') filterKey = 'n'
+      else if (cls === 'pos-v') filterKey = 'v'
+      else if (cls === 'pos-a') filterKey = 'a'
+      else filterKey = 'other'
+
+      if (posFilter.includes(filterKey)) {
+        displayRanges.set(cls, ranges)
+      } else {
+        displayRanges.set(cls, [])
+      }
     }
-    lastRangesByClass.set(editor.document.uri.toString(), editorScopedRanges)
 
     const t3 = Date.now()
     for (const [cls, dt] of decorationTypes) {
-      editor.setDecorations(dt, rangesByClass.get(cls) ?? [])
+      editor.setDecorations(dt, displayRanges.get(cls) ?? [])
     }
 
-    // Push results to side panel (if open)
-    getPanel?.()?.sendAnnotationResult(decorated, editor.document.fileName.split('/').pop() ?? '')
+    // Push filtered results to side panel (matching what's actually visible)
+    const visibleDecorated = decorated.filter(w => {
+      let key: string
+      if (w.colorClass === 'pos-n') key = 'n'
+      else if (w.colorClass === 'pos-v') key = 'v'
+      else if (w.colorClass === 'pos-a') key = 'a'
+      else key = 'other'
+      return posFilter.includes(key)
+    })
+    getPanel?.()?.sendAnnotationResult(visibleDecorated, editor.document.fileName.split('/').pop() ?? '')
   }
 
   /** Per-document storage of last computed ranges, keyed by document URI */
@@ -208,13 +229,17 @@ export function createDecorator(
    * This is O(1) per class — no segmentation, no dict lookup, no DOM traversal.
    */
   function setPosFilter(filter: string[]): void {
+    console.log('[ADHDGoFly] setPosFilter called with:', JSON.stringify(filter))
     const editor = vscode.window.activeTextEditor
-    if (!editor) return
+    if (!editor) { console.log('[ADHDGoFly] setPosFilter: no active editor'); return }
 
-    const docRanges = lastRangesByClass.get(editor.document.uri.toString())
-    if (!docRanges) return
+    const docKey = editor.document.uri.toString()
+    const docRanges = lastRangesByClass.get(docKey)
+    if (!docRanges) { console.log('[ADHDGoFly] setPosFilter: no ranges for', docKey); return }
 
-    // Map posFilter keys to PosColorClass names and their ranges
+    console.log('[ADHDGoFly] setPosFilter: ranges keys =', [...docRanges.keys()].join(','))
+    for (const [k, r] of docRanges) console.log(`  ${k}: ${r.length} ranges`)
+
     const filterToClass: Record<string, PosColorClass> = {
       n: 'pos-n',
       v: 'pos-v',
@@ -223,21 +248,18 @@ export function createDecorator(
     }
 
     for (const [cls, dt] of decorationTypes) {
-      // Determine which filter key this class corresponds to
       let filterKey: string | null = null
       for (const [key, posClass] of Object.entries(filterToClass)) {
         if (posClass === cls) { filterKey = key; break }
       }
       if (!filterKey) continue
 
-      if (filter.includes(filterKey) || filter.includes('other')) {
-        // Show: reapply stored ranges
-        editor.setDecorations(dt, docRanges.get(cls) ?? [])
-      } else {
-        // Hide: clear decorations for this class
-        editor.setDecorations(dt, [])
-      }
+      const show = filter.includes(filterKey)
+      const ranges = docRanges.get(cls) ?? []
+      console.log(`[ADHDGoFly] setPosFilter: ${cls} show=${show} ranges=${ranges.length}`)
+      editor.setDecorations(dt, show ? ranges : [])
     }
+    console.log('[ADHDGoFly] setPosFilter done')
   }
 
   const debouncedApply = debounce((editor: vscode.TextEditor) => applyDecorations(editor), 300)

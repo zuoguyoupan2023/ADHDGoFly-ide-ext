@@ -19,6 +19,12 @@ import { segmentMixed } from '../highlightEngine/segmenter'
 declare var __ADHD_DICT_EN: Record<string, string>
 declare var __ADHD_DICT_ZH: Record<string, string>
 
+/**
+ * Stored POS filter received from the extension via a hidden HTML comment.
+ * Initialized to all visible; updated when extension writes filter through doc.
+ */
+let adhdPosFilter: string[] | null = null
+
 // ── Palettes ───────────────────────────────────────────────────
 
 const DARK_PALETTE: Record<string, string> = {
@@ -91,15 +97,13 @@ function log(...args: unknown[]): void {
   console.log('[ADHDGoFly Preview]', ...args)
 }
 
-/** Current POS filter — hidden POS are display:none'd via CSS */
-let currentPosFilter: string[] = ['n', 'v', 'a', 'o']
-
 /**
  * Apply POS filter by injecting/updating a <style> tag.
  * Rules use [data-pos] attribute on existing spans — no DOM traversal needed.
+ * Reads from adhdPosFilter (set via hidden comment from extension).
  */
 function applyPosFilter(): void {
-  const filter = currentPosFilter
+  const filter = adhdPosFilter || ['n', 'v', 'a', 'o']
   const rules: string[] = []
   const allKeys = ['n', 'v', 'a', 'o']
   for (const key of allKeys) {
@@ -118,33 +122,25 @@ function applyPosFilter(): void {
 }
 
 /**
- * Poll for the adhdgofly-filter.js file written by the extension host
- * when the side panel's posFilter changes.
+ * Read POS filter from a hidden HTML comment the extension inserts into the
+ * markdown document. This is the only way to pass data to the preview WebView
+ * due to CSP restrictions (nonce-based script-src, connect-src 'none').
+ *
+ * The extension inserts: <!-- adhdgofly-posfilter:["n","v"] -->
+ * at the start of the document, the preview re-renders, we read it here,
+ * and the extension removes the comment after a short delay.
  */
-function setupFilterPolling(): void {
-  // Determine base URL from the highlighter script's own <script> tag
-  const scriptTag = document.currentScript as HTMLScriptElement | null
-  if (!scriptTag || !scriptTag.src) return
-  const baseUrl = scriptTag.src.substring(0, scriptTag.src.lastIndexOf('/'))
-
-  let lastFilterJson = ''
-  setInterval(async () => {
-    try {
-      const url = baseUrl + `/adhdgofly-filter.js?_=${Date.now()}`
-      const res = await fetch(url)
-      const js = await res.text()
-      if (js === lastFilterJson) return
-      lastFilterJson = js
-      // Execute the script content — it sets window.__ADHD_POS_FILTER
-      const match = js.match(/__ADHD_POS_FILTER=(\[.*?\])/)
-      if (match) {
-        currentPosFilter = JSON.parse(match[1])
-        applyPosFilter()
-      }
-    } catch {
-      // File doesn't exist yet — use default filter (all visible)
+function readFilterFromDocument(): void {
+  // Search for comment nodes containing the magic marker
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT, null)
+  let node: Comment | null
+  while ((node = walker.nextNode() as Comment | null)) {
+    const match = node.data?.match(/adhdgofly-posfilter:(\[.*?\])/)
+    if (match) {
+      try { adhdPosFilter = JSON.parse(match[1]) } catch {}
+      break
     }
-  }, 2000) // check every 2 seconds
+  }
 }
 
 // ── Highlight processing ───────────────────────────────────────
@@ -200,6 +196,8 @@ function processAll(): void {
 
     log(`Processed ${nodes.length} nodes, ${totalSpans} highlights (${isDarkTheme() ? 'dark' : 'light'} theme)`)
 
+    // Read POS filter from extension-injected comment (if present)
+    readFilterFromDocument()
     // Apply active POS filter to hide/show specific categories
     applyPosFilter()
   } catch (err) {
@@ -251,7 +249,7 @@ function init(): void {
     processAll()
     setupObserver()
     setupThemeObserver()
-    setupFilterPolling()
+    readFilterFromDocument()
   }
 
   if (document.readyState === 'loading') {

@@ -50,7 +50,7 @@ export function matchSegments(
     } else {
       filterKey = (posKey === 'adj' || posKey === 'adv') ? 'a' : posKey
     }
-    if (!posFilter.includes(filterKey) && !posFilter.includes('other')) continue
+    if (!posFilter.includes(filterKey)) continue
 
     results.push({
       word: seg.word,

@@ -81,16 +81,34 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
   }
 
   /**
-   * Write current posFilter to out/preview/adhdgofly-filter.js.
-   * The preview highlighter polls this file to update visibility without reprocessing.
+   * Inject posFilter into the markdown preview by inserting a hidden HTML comment
+   * at the start of the active markdown document. The comment is kept permanently
+   * (invisible to the user) so the highlighter can read it on every re-render.
+   *
+   * This is necessary because the preview WebView's CSP (nonce-based script-src,
+   * connect-src 'none') blocks all other communication channels.
    */
-  async writePreviewFilterFile(filter: string[]): Promise<void> {
-    try {
-      const filterFile = path.join(this.extensionUri.fsPath, 'out', 'preview', 'adhdgofly-filter.js')
-      const js = `window.__ADHD_POS_FILTER=${JSON.stringify(filter)};`
-      await fs.promises.writeFile(filterFile, js, 'utf-8')
-    } catch (err) {
-      // Silently fail — the preview will use default filter
+  async injectPosFilter(filter: string[]): Promise<void> {
+    const editor = vscode.window.activeTextEditor
+    if (!editor || editor.document.languageId !== 'markdown') return
+
+    const doc = editor.document
+    const comment = `<!-- adhdgofly-posfilter:${JSON.stringify(filter)} -->`
+
+    // Check if comment already exists at line 0
+    const firstLine = doc.lineAt(0)
+    const re = /^<!-- adhdgofly-posfilter:/
+
+    if (re.test(firstLine.text)) {
+      // Replace existing comment value
+      await editor.edit(b =>
+        b.replace(firstLine.rangeIncludingLineBreak, comment + '\n')
+      )
+    } else {
+      // Insert new comment at start
+      await editor.edit(b =>
+        b.insert(new vscode.Position(0, 0), comment + '\n')
+      )
     }
   }
 
@@ -271,12 +289,15 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
       }
 
       case 'posFilterChange': {
+        console.log('[ADHDGoFly] sidePanel posFilterChange:', JSON.stringify(msg.filter))
         await vscode.workspace.getConfiguration('adhdgofly').update('posFilter', msg.filter, vscode.ConfigurationTarget.Global)
         this.post({ type: 'config', config: loadConfig() })
         // Instant editor toggle — no reprocessing
+        console.log('[ADHDGoFly] calling onPosFilter:', !!this.onPosFilter)
         this.onPosFilter?.(msg.filter)
-        // Write filter file for markdown preview (read by highlighter.js polling)
-        this.writePreviewFilterFile(msg.filter)
+        // Communicate filter to markdown preview via a hidden HTML comment
+        // (preview WebView CSP blocks all other communication channels)
+        this.injectPosFilter(msg.filter)
         break
       }
 
