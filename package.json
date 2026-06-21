@@ -37,6 +37,9 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "markdown.previewScripts": [
+      "./out/preview/highlighter.js"
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -179,13 +182,17 @@
     "test": "vitest run",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",
-    "build": "npm run compile"
+    "build": "npm run compile",
+    "build-preview": "node scripts/build-preview.mjs",
+    "build-all": "npm run build && npm run build-preview",
+    "clean": "rm -rf out"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "esbuild": "^0.28.1",
     "eslint": "^8.0.0",
     "typescript": "^5.9.3",
     "vitest": "^1.6.1"
