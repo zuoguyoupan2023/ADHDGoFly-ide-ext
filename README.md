@@ -96,6 +96,26 @@ code --install-extension adhdgofly-ide-ext-1.0.0.vsix
 
 ---
 
+## FAQ / 常见问题
+
+### 为什么文档开头会出现一行 HTML 注释？
+打开 Markdown 预览时调整词性筛选（侧面板名/动/形/其他按钮），扩展会在文档开头插入一行 `<!-- adhdgofly-posfilter:... -->` 注释。这是为了把当前筛选状态传递给预览 WebView（由于 CSP 限制，其他信道不可用）。
+
+### 这行注释会一直留在我的文件里吗？
+**不会。** 保存文件时（`Ctrl+S`），这行注释会被自动清除。你不需要手动删除它。如果关闭文档前没有保存，注释也是临时的，下次打开不会保留。
+
+### 不打开 Markdown 预览时也会插入吗？
+**不会。** 扩展会检测当前文档是否有 Markdown 预览 Tab 打开，只有打开预览时才会插入注释。
+
+### Why does an HTML comment appear at the top of my file?
+When you toggle POS filters in the side panel while the Markdown preview is open, the extension inserts a `<!-- adhdgofly-posfilter:... -->` comment to communicate the filter state to the preview WebView (CSP restrictions block other channels).
+
+### Will this comment stay in my file?
+**No.** It is automatically removed when you save (`Ctrl+S`). No manual cleanup needed.
+
+### Does it appear without the Markdown preview open?
+**No.** The extension checks if a Markdown preview tab is actually open before inserting the comment.
+
 ## Related Projects / 相关项目
 
 - **adhdgoflyplugin** (浏览器扩展 / Browser extension)

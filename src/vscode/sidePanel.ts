@@ -82,39 +82,24 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
 
   /**
    * Inject posFilter into the markdown preview by inserting a hidden HTML comment
-   * at the start of the active markdown document.
+   * at the start of the markdown document.
    *
-   * Only inserts when a markdown preview is actually open (checked via tab groups).
    * The comment is bilingual and explains its purpose. It's auto-removed on save
    * by onWillSaveTextDocument in extension.ts.
    *
    * This is necessary because the preview WebView's CSP (nonce-based script-src,
    * connect-src 'none') blocks all other communication channels.
+   * Markdown preview in VS Code does NOT create a separate tab, so we can't
+   * detect it reliably — insert the comment unconditionally for markdown files.
    */
   async injectPosFilter(filter: string[]): Promise<void> {
     const editor = vscode.window.activeTextEditor
     if (!editor || editor.document.languageId !== 'markdown') return
 
-    const docUri = editor.document.uri.toString()
-
-    // Only insert if a markdown preview is actually open for this document
-    let previewOpen = false
-    for (const group of vscode.window.tabGroups.all) {
-      for (const tab of group.tabs) {
-        if (tab.input instanceof vscode.TabInputCustom) {
-          const custom = tab.input as vscode.TabInputCustom
-          if (custom.viewType.toLowerCase().includes('markdown') && custom.uri.toString() === docUri) {
-            previewOpen = true
-            break
-          }
-        }
-      }
-      if (previewOpen) break
-    }
-    if (!previewOpen) return
-
-    // Bilingual comment — language matches IDE UI language
-    const isZh = vscode.env.language.startsWith('zh')
+    // Bilingual comment — language matches plugin locale setting, then IDE UI language
+    const cfg = loadConfig()
+    const locale = cfg.locale !== 'auto' ? cfg.locale : (vscode.env.language.startsWith('zh') ? 'zh' : 'en')
+    const isZh = locale === 'zh'
     const filterJson = JSON.stringify(filter)
     const comment = isZh
       ? `<!-- adhdgofly-posfilter:${filterJson} 预览高亮辅助 — 保存时自动清除，无需手动删除 -->`

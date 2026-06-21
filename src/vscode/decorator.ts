@@ -235,7 +235,11 @@ export function createDecorator(
 
     const docKey = editor.document.uri.toString()
     const docRanges = lastRangesByClass.get(docKey)
-    if (!docRanges) { console.log('[ADHDGoFly] setPosFilter: no ranges for', docKey); return }
+    if (!docRanges) {
+      console.log('[ADHDGoFly] setPosFilter: no cached ranges for', docKey, '- falling back to full reprocess')
+      applyDecorations(editor)
+      return
+    }
 
     console.log('[ADHDGoFly] setPosFilter: ranges keys =', [...docRanges.keys()].join(','))
     for (const [k, r] of docRanges) console.log(`  ${k}: ${r.length} ranges`)
