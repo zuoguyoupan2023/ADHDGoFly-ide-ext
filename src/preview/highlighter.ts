@@ -91,6 +91,62 @@ function log(...args: unknown[]): void {
   console.log('[ADHDGoFly Preview]', ...args)
 }
 
+/** Current POS filter — hidden POS are display:none'd via CSS */
+let currentPosFilter: string[] = ['n', 'v', 'a', 'o']
+
+/**
+ * Apply POS filter by injecting/updating a <style> tag.
+ * Rules use [data-pos] attribute on existing spans — no DOM traversal needed.
+ */
+function applyPosFilter(): void {
+  const filter = currentPosFilter
+  const rules: string[] = []
+  const allKeys = ['n', 'v', 'a', 'o']
+  for (const key of allKeys) {
+    const isVisible = filter.includes(key) || filter.includes('other')
+    if (!isVisible) {
+      rules.push(`[data-pos="${key}"]{display:none!important}`)
+    }
+  }
+  let style = document.getElementById('adhdgofly-pos-filter') as HTMLStyleElement | null
+  if (!style) {
+    style = document.createElement('style')
+    style.id = 'adhdgofly-pos-filter'
+    document.head.appendChild(style)
+  }
+  style.textContent = rules.join('')
+}
+
+/**
+ * Poll for the adhdgofly-filter.js file written by the extension host
+ * when the side panel's posFilter changes.
+ */
+function setupFilterPolling(): void {
+  // Determine base URL from the highlighter script's own <script> tag
+  const scriptTag = document.currentScript as HTMLScriptElement | null
+  if (!scriptTag || !scriptTag.src) return
+  const baseUrl = scriptTag.src.substring(0, scriptTag.src.lastIndexOf('/'))
+
+  let lastFilterJson = ''
+  setInterval(async () => {
+    try {
+      const url = baseUrl + `/adhdgofly-filter.js?_=${Date.now()}`
+      const res = await fetch(url)
+      const js = await res.text()
+      if (js === lastFilterJson) return
+      lastFilterJson = js
+      // Execute the script content — it sets window.__ADHD_POS_FILTER
+      const match = js.match(/__ADHD_POS_FILTER=(\[.*?\])/)
+      if (match) {
+        currentPosFilter = JSON.parse(match[1])
+        applyPosFilter()
+      }
+    } catch {
+      // File doesn't exist yet — use default filter (all visible)
+    }
+  }, 2000) // check every 2 seconds
+}
+
 // ── Highlight processing ───────────────────────────────────────
 
 function processAll(): void {
@@ -143,6 +199,9 @@ function processAll(): void {
     }
 
     log(`Processed ${nodes.length} nodes, ${totalSpans} highlights (${isDarkTheme() ? 'dark' : 'light'} theme)`)
+
+    // Apply active POS filter to hide/show specific categories
+    applyPosFilter()
   } catch (err) {
     console.error('[ADHDGoFly Preview] Error:', err)
   } finally {
@@ -192,6 +251,7 @@ function init(): void {
     processAll()
     setupObserver()
     setupThemeObserver()
+    setupFilterPolling()
   }
 
   if (document.readyState === 'loading') {

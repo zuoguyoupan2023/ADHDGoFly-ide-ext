@@ -84,6 +84,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Now dictionaries are loaded — create decorator with event subscriptions
   decoratorInstance = createDecorator(context, engine, () => sidePanelProvider ?? undefined)
+  // Wire up instant posFilter toggle for the editor
+  sidePanelProvider.onPosFilter = (filter) => decoratorInstance?.setPosFilter(filter)
 
   // Register side panel
   context.subscriptions.push(

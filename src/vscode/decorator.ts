@@ -179,6 +179,13 @@ export function createDecorator(
       total++
     }
 
+    // Store ranges per class for instant toggle via setPosFilter
+    const editorScopedRanges = new Map<PosColorClass, vscode.Range[]>()
+    for (const [cls, ranges] of rangesByClass) {
+      editorScopedRanges.set(cls, [...ranges])
+    }
+    lastRangesByClass.set(editor.document.uri.toString(), editorScopedRanges)
+
     const t3 = Date.now()
     for (const [cls, dt] of decorationTypes) {
       editor.setDecorations(dt, rangesByClass.get(cls) ?? [])
@@ -186,6 +193,51 @@ export function createDecorator(
 
     // Push results to side panel (if open)
     getPanel?.()?.sendAnnotationResult(decorated, editor.document.fileName.split('/').pop() ?? '')
+  }
+
+  /** Per-document storage of last computed ranges, keyed by document URI */
+  const lastRangesByClass = new Map<string, Map<PosColorClass, vscode.Range[]>>()
+
+  /**
+   * Toggle POS visibility WITHOUT reprocessing the document.
+   *
+   * For each POS class:
+   *   - If the key is in the active filter → reapply stored ranges
+   *   - If the key is NOT in the filter → clear decorations (hide)
+   *
+   * This is O(1) per class — no segmentation, no dict lookup, no DOM traversal.
+   */
+  function setPosFilter(filter: string[]): void {
+    const editor = vscode.window.activeTextEditor
+    if (!editor) return
+
+    const docRanges = lastRangesByClass.get(editor.document.uri.toString())
+    if (!docRanges) return
+
+    // Map posFilter keys to PosColorClass names and their ranges
+    const filterToClass: Record<string, PosColorClass> = {
+      n: 'pos-n',
+      v: 'pos-v',
+      a: 'pos-a',
+      other: 'pos-other',
+    }
+
+    for (const [cls, dt] of decorationTypes) {
+      // Determine which filter key this class corresponds to
+      let filterKey: string | null = null
+      for (const [key, posClass] of Object.entries(filterToClass)) {
+        if (posClass === cls) { filterKey = key; break }
+      }
+      if (!filterKey) continue
+
+      if (filter.includes(filterKey) || filter.includes('other')) {
+        // Show: reapply stored ranges
+        editor.setDecorations(dt, docRanges.get(cls) ?? [])
+      } else {
+        // Hide: clear decorations for this class
+        editor.setDecorations(dt, [])
+      }
+    }
   }
 
   const debouncedApply = debounce((editor: vscode.TextEditor) => applyDecorations(editor), 300)
@@ -220,6 +272,7 @@ export function createDecorator(
     forceApply(editor: vscode.TextEditor) {
       applyDecorations(editor)
     },
+    setPosFilter,
     annotateSelection() {
       const editor = vscode.window.activeTextEditor
       if (!editor) return

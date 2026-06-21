@@ -41,6 +41,9 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
   /** BatchProcessor reference — set by extension.ts after creation */
   private batchProcessor?: BatchProcessor
 
+  /** Callback for posFilter changes — wired to decorator.setPosFilter() by extension.ts */
+  onPosFilter: ((filter: string[]) => void) | null = null
+
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly dictManager: DictionaryManager,
@@ -75,6 +78,20 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
   /** Send user-created dict list */
   sendUserDictList(): void {
     this.post({ type: 'userDictList', dicts: this.dictManager.getUserDictList() })
+  }
+
+  /**
+   * Write current posFilter to out/preview/adhdgofly-filter.js.
+   * The preview highlighter polls this file to update visibility without reprocessing.
+   */
+  async writePreviewFilterFile(filter: string[]): Promise<void> {
+    try {
+      const filterFile = path.join(this.extensionUri.fsPath, 'out', 'preview', 'adhdgofly-filter.js')
+      const js = `window.__ADHD_POS_FILTER=${JSON.stringify(filter)};`
+      await fs.promises.writeFile(filterFile, js, 'utf-8')
+    } catch (err) {
+      // Silently fail — the preview will use default filter
+    }
   }
 
   /** Set the BatchProcessor reference for message routing */
@@ -255,8 +272,11 @@ export class SidePanelProvider implements vscode.WebviewViewProvider {
 
       case 'posFilterChange': {
         await vscode.workspace.getConfiguration('adhdgofly').update('posFilter', msg.filter, vscode.ConfigurationTarget.Global)
-        // Re-post config so the webview stays in sync and triggers applyConfig
         this.post({ type: 'config', config: loadConfig() })
+        // Instant editor toggle — no reprocessing
+        this.onPosFilter?.(msg.filter)
+        // Write filter file for markdown preview (read by highlighter.js polling)
+        this.writePreviewFilterFile(msg.filter)
         break
       }
 
