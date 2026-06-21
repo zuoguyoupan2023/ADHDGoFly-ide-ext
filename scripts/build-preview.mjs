@@ -1,9 +1,12 @@
 /**
  * Build the markdown preview highlighter bundle.
  *
- * 1. Generates full EN + ZH color maps from dictionary JSONs
+ * 1. Generates EN + ZH dictionaries (word → POS key, e.g. "n"/"v"/"a"/"o")
  * 2. Bundles src/preview/highlighter.ts into browser-compatible .js
- * 3. Prepends both dictionaries as globals (prevents script ordering issues)
+ * 3. Prepends both dictionaries as globals (avoids script ordering issues)
+ *
+ * POS keys are resolved to colors at runtime by highlighter.ts
+ * based on the detected theme (dark/light).
  *
  * Usage: node scripts/build-preview.mjs
  */
@@ -17,21 +20,14 @@ const root = path.resolve(__dirname, '..')
 const outDir = path.join(root, 'out', 'preview')
 fs.mkdirSync(outDir, { recursive: true })
 
-// ── Color mapping — synced with matcher.ts POS_COLOR_MAP ────────────
+// ── POS key mapping — synced with matcher.ts POS_COLOR_MAP ──────────
 
-const POS_TO_COLOR = {
-  n: '#4ade80',   // noun green
-  v: '#f87171',   // verb red
-  adj: '#a78bfa', // adjective purple
-  adv: '#a78bfa', // adverb purple
-}
-
-function posToColor(posStr) {
+function posToKey(posStr) {
   const primary = posStr.split(',')[0].trim().toLowerCase()
-  if (primary === 'n' || primary === 'nr' || primary === 'ns' || primary === 'nt' || primary === 'nz' || primary === 't') return POS_TO_COLOR.n
-  if (primary === 'v') return POS_TO_COLOR.v
-  if (primary === 'adj' || primary === 'a' || primary === 'adv' || primary === 'd') return POS_TO_COLOR.adj
-  return '#9ca3af' // other gray
+  if (primary === 'n' || primary === 'nr' || primary === 'ns' || primary === 'nt' || primary === 'nz' || primary === 't') return 'n'
+  if (primary === 'v') return 'v'
+  if (primary === 'adj' || primary === 'a' || primary === 'adv' || primary === 'd') return 'a'
+  return 'o'
 }
 
 // ── Dictionary builder ────────────────────────────────────────────
@@ -41,17 +37,17 @@ function buildDict(lang, filePath) {
   const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
   const entries = Object.entries(raw.words)
 
-  const colorMap = {}
+  const posMap = {}
   for (const [word, entry] of entries) {
     if (entry.pos && entry.pos.length > 0) {
-      colorMap[word.toLowerCase()] = posToColor(entry.pos[0])
+      posMap[word.toLowerCase()] = posToKey(entry.pos[0])
     }
   }
 
   // Sort for deterministic output
-  const sorted = Object.keys(colorMap).sort()
+  const sorted = Object.keys(posMap).sort()
   const result = {}
-  for (const w of sorted) result[w] = colorMap[w]
+  for (const w of sorted) result[w] = posMap[w]
 
   const js = JSON.stringify(result)
   const kb = (Buffer.byteLength(js, 'utf-8') / 1024).toFixed(1)
