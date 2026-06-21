@@ -104,12 +104,12 @@ function log(...args: unknown[]): void {
  */
 function applyPosFilter(): void {
   const filter = adhdPosFilter || ['n', 'v', 'a', 'o']
-  const rules: string[] = []
   const allKeys = ['n', 'v', 'a', 'o']
+  const rules: string[] = []
   for (const key of allKeys) {
-    const isVisible = filter.includes(key) || filter.includes('other')
-    if (!isVisible) {
-      rules.push(`[data-pos="${key}"]{display:none!important}`)
+    if (!filter.includes(key)) {
+      // Remove color instead of display:none — text stays, just unhighlighted
+      rules.push(`[data-pos="${key}"]{color:inherit!important;font-weight:inherit!important}`)
     }
   }
   let style = document.getElementById('adhdgofly-pos-filter') as HTMLStyleElement | null
