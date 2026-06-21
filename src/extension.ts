@@ -101,6 +101,25 @@ export async function activate(context: vscode.ExtensionContext) {
   for (const editor of vscode.window.visibleTextEditors) {
     decoratorInstance?.forceApply(editor)
   }
+
+  // Strip posfilter comment before save so it never persists in user files
+  context.subscriptions.push(
+    vscode.workspace.onWillSaveTextDocument(e => {
+      const doc = e.document
+      if (doc.lineCount === 0) return
+      const firstLine = doc.lineAt(0).text
+      const re = /^<!-- adhdgofly-posfilter:/
+      if (!re.test(firstLine)) return
+
+      // Remove the filter comment line from the saved content
+      e.waitUntil(Promise.resolve([
+        new vscode.TextEdit(
+          doc.lineAt(0).rangeIncludingLineBreak,
+          firstLine.replace(/^<!-- adhdgofly-posfilter:\[.*?\] -->\n?/, '')
+        ),
+      ]))
+    }),
+  )
 }
 
 export function deactivate() {
