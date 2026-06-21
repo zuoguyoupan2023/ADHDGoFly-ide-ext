@@ -19,6 +19,8 @@ Works in markdown, plain text, and code comments across VS Code, Cursor, Windsur
 ## Features
 
 - **Auto-highlight** — open a `.md` / `.txt` file and see POS-colored words appear within 1 second
+- **Markdown preview** — highlights carry over to the rendered preview (`Ctrl+Shift+V`), same colors as the editor
+- **Dark / Light theme** — both editor and preview automatically switch between optimized color palettes when you change your IDE theme
 - **Multi-language** — English (noun green, verb red, adjective purple) and Chinese (BMM segmentation)
 - **Mixed-language text** — correctly handles mixed Chinese/English text like `我想用chatgpt` without language classification
 - **Code file support** — highlights natural language inside code comments and strings only (JS/TS/Python/Go/HTML)
@@ -57,6 +59,8 @@ code --install-extension adhdgofly-ide-ext-1.0.0.vsix
 ## 功能
 
 - **自动高亮** — 打开 `.md` / `.txt` 文件，1 秒内自动完成分词和着色
+- **Markdown 预览** — 渲染预览（`Ctrl+Shift+V`）中同样生效，颜色与编辑器一致
+- **深色/浅色适配** — 切换 IDE 主题时编辑器和预览自动切换优化色板
 - **多语言支持** — 英文（名词绿、动词红、形容词紫）和中文（BMM 分词）
 - **中英混排** — 正确支持 `我想用chatgpt` 这类中英混合文本，无需语言分类
 - **代码文件** — 仅在注释和字符串内标注，不影响代码语法高亮（支持 JS/TS/Python/Go/HTML）
@@ -105,14 +109,16 @@ src/
 ├── extension.ts           Entry point (lifecycle)
 ├── highlightEngine/       Pure logic (zero vscode imports)
 │   ├── segmenter.ts       BMM + character-dispatch segmentation
-│   ├── matcher.ts         POS → color mapping
+│   ├── matcher.ts         POS → color class mapping
 │   ├── lemmatizer.ts      English inflection handling
 │   ├── language.ts        Language detection helpers
 │   └── index.ts           Process orchestrator
+├── preview/               Markdown preview script (browser bundle)
+│   └── highlighter.ts     DOM walker + segmentation + theme-aware coloring
 ├── dictionary/            Data layer
 │   └── manager.ts         Multi-layer dict load/merge/edit/persist
 ├── vscode/                VS Code platform adapter
-│   ├── decorator.ts       Decoration API
+│   ├── decorator.ts       Decoration API (dual-palette dark/light)
 │   ├── sidePanel.ts       WebviewView panel
 │   └── config.ts          Settings
 └── webview/               Side panel UI
